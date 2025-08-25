@@ -1,0 +1,364 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rasterio-analysis"
+version = "0.1.0"
+description = "GIST 604B - Python Rasterio Advanced Raster Processing Assignment"
+readme = "README.md"
+authors = [
+    {name = "Student", email = "student@email.arizona.edu"},
+]
+license = {text = "MIT"}
+keywords = ["gis", "rasterio", "raster-analysis", "remote-sensing", "python", "cog", "stac"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Education",
+]
+requires-python = ">=3.13"
+
+dependencies = [
+    # Core raster processing
+    "rasterio>=1.3.9,<2.0",
+    "numpy>=1.26.2,<2.0",
+    "scipy>=1.11.4,<2.0",
+    "xarray>=2023.12.0,<2024.0",
+
+    # Geospatial integration
+    "geopandas>=0.14.1,<0.15.0",
+    "pandas>=2.1.4,<3.0",
+    "shapely>=2.0.0,<3.0",
+    "pyproj>=3.6.0,<4.0",
+    "fiona>=1.9.0,<2.0",
+    "rtree>=1.2.0,<2.0",
+
+    # Raster-vector integration
+    "rasterstats>=0.19.0,<1.0",
+    "rioxarray>=0.15.0,<1.0",
+    "geocube>=0.4.0,<1.0",
+
+    # Cloud and remote sensing
+    "pystac-client>=0.7.5,<1.0",
+    "planetary-computer>=0.4.9,<1.0",
+    "stackstac>=0.5.0,<1.0",
+    "requests>=2.31.0,<3.0",
+    "aiohttp>=3.9.0,<4.0",
+
+    # Data sources and sample datasets
+    "geodatasets>=2023.12.0",
+    "pooch>=1.8.0,<2.0",
+
+    # Visualization
+    "matplotlib>=3.8.2,<4.0",
+    "seaborn>=0.13.0,<1.0",
+    "contextily>=1.4.0,<2.0",
+    "folium>=0.15.0,<1.0",
+    "mapclassify>=2.6.0,<3.0",
+    "plotly>=5.17.0,<6.0",
+
+    # Interactive development
+    "jupyter>=1.0.0,<2.0",
+    "ipykernel>=6.25.0,<7.0",
+    "notebook>=7.0.0,<8.0",
+    "ipywidgets>=8.1.0,<9.0",
+
+    # Performance and parallel processing
+    "dask[complete]>=2023.12.0,<2024.0",
+    "numba>=0.58.0,<1.0",
+    "joblib>=1.3.0,<2.0",
+
+    # File format support
+    "h5py>=3.10.0,<4.0",
+    "netcdf4>=1.6.0,<2.0",
+    "zarr>=2.16.0,<3.0",
+    "openpyxl>=3.1.0,<4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Code quality and formatting
+    "black>=23.12.1,<25.0",
+    "ruff>=0.1.8,<1.0",
+    "mypy>=1.8.0,<2.0",
+
+    # Testing framework
+    "pytest>=7.4.3,<8.0",
+    "pytest-cov>=4.1.0,<5.0",
+    "pytest-xdist>=3.5.0,<4.0",
+    "pytest-mock>=3.12.0,<4.0",
+    "pytest-benchmark>=4.0.0,<5.0",
+
+    # Security scanning
+    "bandit>=1.7.5,<2.0",
+    "safety>=3.0.1,<4.0",
+
+    # Documentation and type stubs
+    "types-requests>=2.31.0",
+    "pandas-stubs>=2.1.0",
+
+    # Development utilities
+    "pre-commit>=3.6.0,<4.0",
+    "tox>=4.11.0,<5.0",
+]
+
+performance = [
+    # High-performance computing
+    "dask-geopandas>=0.3.0,<1.0",
+    "cupy>=12.0.0,<13.0",  # GPU acceleration (optional)
+
+    # Parallel processing
+    "multiprocess>=0.70.0,<1.0",
+    "concurrent-futures>=3.1.0,<4.0",
+
+    # Memory profiling
+    "memory_profiler>=0.61.0,<1.0",
+    "psutil>=5.9.0,<6.0",
+    "line_profiler>=4.1.0,<5.0",
+]
+
+cloud = [
+    # Cloud storage and processing
+    "fsspec[s3,gcs,azure]>=2023.12.0,<2024.0",
+    "s3fs>=2023.12.0,<2024.0",
+    "gcsfs>=2023.12.0,<2024.0",
+
+    # COG optimization
+    "rio-cogeo>=5.0.0,<6.0",
+    "morecantile>=4.2.0,<5.0",
+
+    # STAC and metadata
+    "pystac>=1.9.0,<2.0",
+    "stac-validator>=3.3.0,<4.0",
+]
+
+visualization = [
+    # Advanced plotting
+    "bokeh>=3.3.0,<4.0",
+    "holoviews>=1.18.0,<2.0",
+    "hvplot>=0.9.0,<1.0",
+
+    # Interactive mapping
+    "ipyleaflet>=0.18.0,<1.0",
+    "leafmap>=0.31.0,<1.0",
+
+    # 3D visualization
+    "pyvista>=0.43.0,<1.0",
+    "pythreejs>=2.4.0,<3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/rasterio-analysis"
+Documentation = "https://github.com/your-org/rasterio-analysis#readme"
+Repository = "https://github.com/your-org/rasterio-analysis.git"
+"Bug Tracker" = "https://github.com/your-org/rasterio-analysis/issues"
+
+[project.scripts]
+rasterio-analysis = "rasterio_analysis.cli:main"
+
+# ==============================================================================
+# Tool Configuration
+# ==============================================================================
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["rasterio_analysis*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.txt", "*.md", "*.yml", "*.yaml", "*.json"]
+
+# Black code formatting
+[tool.black]
+line-length = 88
+target-version = ['py313']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | node_modules
+)/
+'''
+
+# Ruff linting and code quality
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+    "ARG",  # flake8-unused-arguments
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "TID",  # flake8-tidy-imports
+    "Q",    # flake8-quotes
+    "FLY",  # flynt
+    "PERF", # perflint
+    "RUF",  # ruff-specific rules
+]
+ignore = [
+    "E501",   # Line too long, handled by black
+    "B008",   # Do not perform function calls in argument defaults
+    "C901",   # Too complex
+    "ARG002", # Unused method argument
+    "ARG001", # Unused function argument
+    "TID252", # Prefer absolute imports over relative imports from parent modules
+]
+
+[tool.ruff.per-file-ignores]
+"tests/*" = ["ARG", "FBT"]
+"__init__.py" = ["F401"]
+
+[tool.ruff.mccabe]
+max-complexity = 12
+
+# MyPy type checking
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+show_error_context = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = [
+    "rasterio.*",
+    "rioxarray.*",
+    "xarray.*",
+    "rasterstats.*",
+    "pystac_client.*",
+    "planetary_computer.*",
+    "stackstac.*",
+    "geopandas.*",
+    "contextily.*",
+    "folium.*",
+    "geodatasets.*",
+    "mapclassify.*",
+    "rtree.*",
+    "fiona.*",
+    "pyproj.*",
+    "shapely.*",
+    "dask.*",
+    "zarr.*",
+    "h5py.*",
+    "netcdf4.*",
+]
+ignore_missing_imports = true
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src/rasterio_analysis",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=70",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "benchmark: marks tests as benchmark tests",
+    "raster: marks tests that require raster data",
+    "cloud: marks tests that require cloud data access",
+    "visualization: marks tests that generate visualizations",
+    "network: marks tests that require network access",
+    "memory_intensive: marks tests that use significant memory",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::ImportWarning",
+    "ignore:.*GDAL.*:UserWarning",
+    "ignore:.*Rasterio.*:UserWarning",
+    "ignore:.*Shapely.*:UserWarning",
+    "ignore:.*GeoPandas.*:FutureWarning",
+    "ignore:.*Xarray.*:FutureWarning",
+    "ignore:.*Dask.*:UserWarning",
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src"]
+parallel = true
+context = '${CONTEXT}'
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+# Bandit security linting
+[tool.bandit]
+exclude_dirs = ["tests", "build", "dist", ".venv", ".tox"]
+tests = ["B201", "B301"]
+skips = ["B101", "B601"]
+
+# Performance profiling
+[tool.pytest-benchmark]
+only_run_when_benchmarking = true
+sort = "mean"
+compare_fail = "mean:10%"
+warmup = true
+warmup_iterations = 100000
+disable_gc = true
+min_rounds = 3
+max_time = 30.0
+calibration_precision = 10

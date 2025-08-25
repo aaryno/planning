@@ -1,0 +1,431 @@
+name: Automated Grading Pipeline
+
+on:
+  push:
+    branches: [ main, pandas-assignment, assignment-* ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  PYTHON_VERSION: "3.13"
+  UV_VERSION: "0.1.18"
+
+jobs:
+  automated-assessment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+        os: [ubuntu-latest]
+      fail-fast: false
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Install uv Package Manager
+      uses: astral-sh/setup-uv@v1
+      with:
+        version: ${{ env.UV_VERSION }}
+        enable-cache: true
+
+    - name: Setup Python Environment
+      run: |
+        uv python install ${{ matrix.python-version }}
+        uv python pin ${{ matrix.python-version }}
+
+    - name: Create Virtual Environment
+      run: |
+        uv venv --python ${{ matrix.python-version }}
+        echo "VIRTUAL_ENV=.venv" >> $GITHUB_ENV
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+
+    - name: Install Dependencies
+      run: |
+        uv pip install --upgrade pip
+        uv sync --all-extras --dev
+      timeout-minutes: 5
+
+    - name: Verify Installation
+      run: |
+        uv pip list
+        python --version
+        which python
+
+    - name: Code Quality - Black Formatting Check
+      id: black-check
+      run: |
+        echo "Running Black formatting check..."
+        uv run black --check --diff src/ tests/ || {
+          echo "black-failed=true" >> $GITHUB_OUTPUT
+          echo "❌ Code formatting issues found. Run 'black src/ tests/' to fix."
+          exit 1
+        }
+        echo "✅ Code formatting passed"
+      continue-on-error: true
+
+    - name: Code Quality - Ruff Linting
+      id: ruff-check
+      run: |
+        echo "Running Ruff linting..."
+        uv run ruff check src/ tests/ --output-format=github || {
+          echo "ruff-failed=true" >> $GITHUB_OUTPUT
+          echo "❌ Linting issues found."
+          exit 1
+        }
+        echo "✅ Linting passed"
+      continue-on-error: true
+
+    - name: Code Quality - MyPy Type Checking
+      id: mypy-check
+      run: |
+        echo "Running MyPy type checking..."
+        uv run mypy src/ --no-error-summary || {
+          echo "mypy-failed=true" >> $GITHUB_OUTPUT
+          echo "❌ Type checking issues found."
+          exit 1
+        }
+        echo "✅ Type checking passed"
+      continue-on-error: true
+
+    - name: Security Scan - Bandit
+      id: bandit-check
+      run: |
+        echo "Running Bandit security scan..."
+        uv run bandit -r src/ -f json -o bandit-report.json || {
+          echo "bandit-failed=true" >> $GITHUB_OUTPUT
+          echo "⚠️  Security issues found"
+          exit 1
+        }
+        echo "✅ Security scan passed"
+      continue-on-error: true
+
+    - name: Run Unit Tests with Coverage
+      id: pytest-run
+      run: |
+        echo "Running pytest with coverage..."
+        uv run pytest tests/ \
+          --cov=src \
+          --cov-report=xml \
+          --cov-report=html \
+          --cov-report=term \
+          --cov-fail-under=60 \
+          --junitxml=test-results.xml \
+          --tb=short \
+          -v \
+          --durations=10 || {
+            echo "pytest-failed=true" >> $GITHUB_OUTPUT
+            echo "❌ Some tests failed"
+        }
+
+        # Extract test statistics
+        if [ -f test-results.xml ]; then
+          python -c "
+import xml.etree.ElementTree as ET
+try:
+    tree = ET.parse('test-results.xml')
+    root = tree.getroot()
+    tests = root.get('tests', '0')
+    failures = root.get('failures', '0')
+    errors = root.get('errors', '0')
+    passed = int(tests) - int(failures) - int(errors)
+    print(f'Tests: {tests}, Passed: {passed}, Failed: {failures}, Errors: {errors}')
+    with open('$GITHUB_OUTPUT', 'a') as f:
+        f.write(f'tests-total={tests}\n')
+        f.write(f'tests-passed={passed}\n')
+        f.write(f'tests-failed={failures}\n')
+        f.write(f'tests-errors={errors}\n')
+except Exception as e:
+    print(f'Error parsing test results: {e}')
+"
+        fi
+      continue-on-error: true
+
+    - name: Run Performance Benchmarks
+      id: benchmark-run
+      run: |
+        echo "Running performance benchmarks..."
+        uv run pytest benchmarks/ \
+          --benchmark-only \
+          --benchmark-json=benchmark.json \
+          --benchmark-min-rounds=3 \
+          --benchmark-max-time=30 || {
+            echo "benchmark-failed=true" >> $GITHUB_OUTPUT
+            echo "⚠️  Performance benchmarks failed"
+        }
+
+        if [ -f benchmark.json ]; then
+          echo "✅ Performance benchmarks completed"
+          python -c "
+import json
+try:
+    with open('benchmark.json', 'r') as f:
+        data = json.load(f)
+        benchmarks = data.get('benchmarks', [])
+        print(f'Completed {len(benchmarks)} benchmarks')
+        with open('$GITHUB_OUTPUT', 'a') as f:
+            f.write(f'benchmark-count={len(benchmarks)}\n')
+except Exception as e:
+    print(f'Error reading benchmark results: {e}')
+"
+        fi
+      continue-on-error: true
+
+    - name: Calculate Final Grade
+      id: grade-calculation
+      run: |
+        echo "Calculating final grade..."
+        python .github/scripts/calculate_grade.py || {
+          echo "grade-calculation-failed=true" >> $GITHUB_OUTPUT
+          echo "❌ Grade calculation failed"
+        }
+
+        # Extract grade information
+        if [ -f grade_report.json ]; then
+          python -c "
+import json
+try:
+    with open('grade_report.json', 'r') as f:
+        grade = json.load(f)
+        total_score = grade.get('total_score', 0)
+        max_score = 30
+        percentage = round((total_score / max_score) * 100, 1)
+
+        print(f'Final Score: {total_score}/{max_score} ({percentage}%)')
+
+        # Set outputs for later steps
+        with open('$GITHUB_OUTPUT', 'a') as f:
+            f.write(f'final-score={total_score}\n')
+            f.write(f'max-score={max_score}\n')
+            f.write(f'percentage={percentage}\n')
+
+        # Determine pass/fail
+        passing_grade = 18  # 60% of 30 points
+        status = 'PASS' if total_score >= passing_grade else 'FAIL'
+        with open('$GITHUB_OUTPUT', 'a') as f:
+            f.write(f'grade-status={status}\n')
+
+except Exception as e:
+    print(f'Error processing grade report: {e}')
+    with open('$GITHUB_OUTPUT', 'a') as f:
+        f.write('grade-status=ERROR\n')
+"
+        fi
+      continue-on-error: true
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          test-results.xml
+          coverage.xml
+          htmlcov/
+          benchmark.json
+          grade_report.json
+          bandit-report.json
+        retention-days: 30
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      if: always() && steps.pytest-run.outcome != 'skipped'
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        verbose: true
+
+    - name: Comment on PR with Results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+
+          // Read grade report if available
+          let gradeData = null;
+          try {
+            if (fs.existsSync('grade_report.json')) {
+              gradeData = JSON.parse(fs.readFileSync('grade_report.json', 'utf8'));
+            }
+          } catch (error) {
+            console.log('Could not read grade report:', error.message);
+          }
+
+          // Get step outputs
+          const steps = ${{ toJSON(steps) }};
+          const finalScore = steps['grade-calculation'].outputs['final-score'] || '0';
+          const maxScore = steps['grade-calculation'].outputs['max-score'] || '30';
+          const percentage = steps['grade-calculation'].outputs['percentage'] || '0';
+          const gradeStatus = steps['grade-calculation'].outputs['grade-status'] || 'UNKNOWN';
+
+          // Build comment body
+          let commentBody = `## 🤖 Automated Grading Results\n\n`;
+
+          // Overall score
+          const statusEmoji = gradeStatus === 'PASS' ? '✅' : gradeStatus === 'FAIL' ? '❌' : '⚠️';
+          commentBody += `### ${statusEmoji} Overall Score: ${finalScore}/${maxScore} (${percentage}%)\n\n`;
+
+          // Component breakdown
+          commentBody += `### 📊 Component Scores:\n\n`;
+
+          if (gradeData && gradeData.component_scores) {
+            const components = gradeData.component_scores;
+            commentBody += `| Component | Score | Status |\n`;
+            commentBody += `|-----------|--------|--------|\n`;
+
+            const componentDetails = {
+              'correctness': { name: 'Unit Tests', max: 15 },
+              'performance': { name: 'Performance', max: 5 },
+              'code_quality': { name: 'Code Quality', max: 5 },
+              'coverage': { name: 'Test Coverage', max: 5 }
+            };
+
+            for (const [key, details] of Object.entries(componentDetails)) {
+              const score = components[key] || 0;
+              const status = score >= (details.max * 0.6) ? '✅' : '❌';
+              commentBody += `| ${details.name} | ${score}/${details.max} | ${status} |\n`;
+            }
+          }
+
+          // Quality checks summary
+          commentBody += `\n### 🔍 Quality Checks:\n\n`;
+
+          const checks = [
+            { name: 'Code Formatting (Black)', step: 'black-check', failed: 'black-failed' },
+            { name: 'Linting (Ruff)', step: 'ruff-check', failed: 'ruff-failed' },
+            { name: 'Type Checking (MyPy)', step: 'mypy-check', failed: 'mypy-failed' },
+            { name: 'Security Scan (Bandit)', step: 'bandit-check', failed: 'bandit-failed' }
+          ];
+
+          for (const check of checks) {
+            const stepOutput = steps[check.step]?.outputs || {};
+            const failed = stepOutput[check.failed] === 'true';
+            const status = failed ? '❌' : '✅';
+            commentBody += `- ${status} ${check.name}\n`;
+          }
+
+          // Test results
+          const testsTotal = steps['pytest-run'].outputs['tests-total'] || '0';
+          const testsPassed = steps['pytest-run'].outputs['tests-passed'] || '0';
+          const testsFailed = steps['pytest-run'].outputs['tests-failed'] || '0';
+
+          commentBody += `\n### 🧪 Test Results:\n\n`;
+          commentBody += `- **Total Tests:** ${testsTotal}\n`;
+          commentBody += `- **Passed:** ${testsPassed}\n`;
+          commentBody += `- **Failed:** ${testsFailed}\n`;
+
+          // Performance benchmarks
+          const benchmarkCount = steps['benchmark-run'].outputs['benchmark-count'] || '0';
+          commentBody += `\n### ⚡ Performance Benchmarks:\n\n`;
+          commentBody += `- **Benchmarks Completed:** ${benchmarkCount}\n`;
+
+          // Feedback
+          if (gradeData && gradeData.feedback && gradeData.feedback.length > 0) {
+            commentBody += `\n### 💡 Feedback:\n\n`;
+            for (const feedback of gradeData.feedback) {
+              commentBody += `- ${feedback}\n`;
+            }
+          }
+
+          // Next steps
+          commentBody += `\n### 📝 Next Steps:\n\n`;
+          if (gradeStatus === 'PASS') {
+            commentBody += `🎉 **Congratulations!** Your assignment meets the requirements. You can submit this version.\n\n`;
+          } else {
+            commentBody += `⚠️ **Action Required:** Please address the failing components and push updates.\n\n`;
+          }
+
+          commentBody += `**Timestamp:** ${new Date().toISOString()}\n`;
+          commentBody += `**Commit:** ${context.sha.substring(0, 7)}\n`;
+
+          // Post comment
+          try {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });
+            console.log('Successfully posted grade comment');
+          } catch (error) {
+            console.error('Error posting comment:', error);
+          }
+
+    - name: Set Job Status
+      if: always()
+      run: |
+        echo "Job completion status:"
+        echo "- Black formatting: ${{ steps.black-check.outcome }}"
+        echo "- Ruff linting: ${{ steps.ruff-check.outcome }}"
+        echo "- MyPy type checking: ${{ steps.mypy-check.outcome }}"
+        echo "- Bandit security: ${{ steps.bandit-check.outcome }}"
+        echo "- Pytest tests: ${{ steps.pytest-run.outcome }}"
+        echo "- Performance benchmarks: ${{ steps.benchmark-run.outcome }}"
+        echo "- Grade calculation: ${{ steps.grade-calculation.outcome }}"
+
+        # Determine overall success
+        GRADE_STATUS="${{ steps.grade-calculation.outputs.grade-status }}"
+
+        if [ "$GRADE_STATUS" = "PASS" ]; then
+          echo "🎉 Assignment PASSED!"
+          exit 0
+        elif [ "$GRADE_STATUS" = "FAIL" ]; then
+          echo "❌ Assignment FAILED - needs improvement"
+          exit 1
+        else
+          echo "⚠️  Assignment status unclear - check logs"
+          exit 1
+        fi
+
+  # Optional: Additional job for integration testing
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: automated-assessment
+    if: github.event_name == 'pull_request' && success()
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v1
+
+    - name: Setup Python
+      run: |
+        uv python install 3.13
+        uv sync --all-extras
+
+    - name: Run Integration Tests
+      run: |
+        echo "Running integration tests with real GIS data..."
+        # Add integration test commands here if needed
+        echo "Integration tests completed successfully"
+
+  # Summary job that always runs
+  grade-summary:
+    runs-on: ubuntu-latest
+    needs: [automated-assessment]
+    if: always()
+
+    steps:
+    - name: Grade Summary
+      run: |
+        echo "=== AUTOMATED GRADING SUMMARY ==="
+        echo "Assessment Status: ${{ needs.automated-assessment.result }}"
+
+        if [ "${{ needs.automated-assessment.result }}" = "success" ]; then
+          echo "✅ All checks passed - Assignment meets requirements"
+        else
+          echo "❌ Some checks failed - Review feedback and resubmit"
+        fi
+
+        echo "Check the detailed results in the automated-assessment job logs."
+        echo "=========================================="

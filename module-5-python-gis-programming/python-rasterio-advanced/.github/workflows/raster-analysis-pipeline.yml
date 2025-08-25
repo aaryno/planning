@@ -1,0 +1,473 @@
+name: Rasterio Advanced Processing - Automated Grading Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.13"
+  UV_VERSION: "0.1.18"
+
+jobs:
+  raster-analysis-assessment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+        os: [ubuntu-latest]
+      fail-fast: false
+
+    steps:
+    # Repository Setup
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # System Dependencies for Geospatial Libraries
+    - name: Install System Geospatial Libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          gdal-bin \
+          libgdal-dev \
+          libgeos-dev \
+          libproj-dev \
+          libspatialite7 \
+          libspatialite-dev \
+          libudunits2-dev \
+          libnetcdf-dev \
+          libhdf5-dev \
+          libeccodes-dev \
+          libopenjp2-7-dev \
+          libzstd-dev \
+          liblz4-dev \
+          libblosc-dev \
+          python3-dev \
+          build-essential \
+          curl \
+          wget
+
+        # Verify GDAL installation
+        gdalinfo --version
+        echo "GDAL_DATA=$(gdal-config --datadir)" >> $GITHUB_ENV
+        echo "PROJ_LIB=/usr/share/proj" >> $GITHUB_ENV
+
+    # Environment Variables for Geospatial Processing
+    - name: Set Geospatial Environment Variables
+      run: |
+        echo "GDAL_DATA=/usr/share/gdal" >> $GITHUB_ENV
+        echo "PROJ_LIB=/usr/share/proj" >> $GITHUB_ENV
+        echo "RASTERIO_ENV=test" >> $GITHUB_ENV
+        echo "CPL_LOG=/dev/stderr" >> $GITHUB_ENV
+        echo "GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR" >> $GITHUB_ENV
+
+    # Package Manager Setup
+    - name: Install uv Package Manager
+      uses: astral-sh/setup-uv@v1
+      with:
+        version: ${{ env.UV_VERSION }}
+        enable-cache: true
+
+    # Python Environment Setup
+    - name: Setup Python Environment
+      run: |
+        uv venv --python ${{ env.PYTHON_VERSION }}
+        echo "VIRTUAL_ENV=.venv" >> $GITHUB_ENV
+        echo "PATH=.venv/bin:$PATH" >> $GITHUB_ENV
+
+    # Dependency Installation with Caching
+    - name: Install Raster Processing Dependencies
+      run: |
+        # Install core dependencies
+        uv pip install --system \
+          "rasterio>=1.3.9,<2.0" \
+          "numpy>=1.26.2,<2.0" \
+          "scipy>=1.11.4,<2.0" \
+          "xarray>=2023.12.0,<2024.0" \
+          "geopandas>=0.14.1,<0.15.0" \
+          "pandas>=2.1.4,<3.0" \
+          "shapely>=2.0.0,<3.0" \
+          "pyproj>=3.6.0,<4.0" \
+          "fiona>=1.9.0,<2.0" \
+          "rtree>=1.2.0,<2.0"
+
+        # Install raster-vector integration
+        uv pip install --system \
+          "rasterstats>=0.19.0,<1.0" \
+          "rioxarray>=0.15.0,<1.0" \
+          "geocube>=0.4.0,<1.0"
+
+        # Install cloud and remote sensing packages
+        uv pip install --system \
+          "pystac-client>=0.7.5,<1.0" \
+          "planetary-computer>=0.4.9,<1.0" \
+          "stackstac>=0.5.0,<1.0" \
+          "requests>=2.31.0,<3.0" \
+          "aiohttp>=3.9.0,<4.0"
+
+        # Install visualization packages
+        uv pip install --system \
+          "matplotlib>=3.8.2,<4.0" \
+          "seaborn>=0.13.0,<1.0" \
+          "contextily>=1.4.0,<2.0" \
+          "folium>=0.15.0,<1.0" \
+          "plotly>=5.17.0,<6.0"
+
+        # Install development and testing tools
+        uv pip install --system \
+          "pytest>=7.4.3,<8.0" \
+          "pytest-cov>=4.1.0,<5.0" \
+          "pytest-xdist>=3.5.0,<4.0" \
+          "pytest-benchmark>=4.0.0,<5.0" \
+          "pytest-timeout>=2.2.0,<3.0" \
+          "black>=23.12.1,<25.0" \
+          "ruff>=0.1.8,<1.0" \
+          "mypy>=1.8.0,<2.0" \
+          "memory-profiler>=0.61.0,<1.0" \
+          "psutil>=5.9.0,<6.0"
+
+        # Install performance packages
+        uv pip install --system \
+          "dask[complete]>=2023.12.0,<2024.0" \
+          "numba>=0.58.0,<1.0" \
+          "joblib>=1.3.0,<2.0"
+
+        # Install file format support
+        uv pip install --system \
+          "h5py>=3.10.0,<4.0" \
+          "netcdf4>=1.6.0,<2.0" \
+          "zarr>=2.16.0,<3.0"
+
+      timeout-minutes: 15
+
+    # Verify Installation
+    - name: Verify Raster Processing Installation
+      run: |
+        python -c "
+        import sys
+        import numpy as np
+        import rasterio
+        import geopandas as gpd
+        import xarray as xr
+        import dask
+        print('✅ Core packages imported successfully')
+        print(f'Python: {sys.version}')
+        print(f'NumPy: {np.__version__}')
+        print(f'Rasterio: {rasterio.__version__}')
+        print(f'GeoPandas: {gpd.__version__}')
+        print(f'Xarray: {xr.__version__}')
+        print(f'Dask: {dask.__version__}')
+
+        # Test GDAL functionality
+        from osgeo import gdal
+        print(f'GDAL: {gdal.__version__}')
+
+        # Test rasterio with GDAL
+        import rasterio.env
+        with rasterio.env.Env():
+            print('✅ Rasterio environment initialized')
+
+        # Test cloud packages
+        try:
+            import pystac_client
+            import planetary_computer
+            import stackstac
+            print('✅ Cloud processing packages available')
+        except ImportError as e:
+            print(f'⚠️  Cloud packages partially available: {e}')
+        "
+
+    # Setup Test Data Environment
+    - name: Setup Test Data and Environment
+      run: |
+        # Create data directories
+        mkdir -p data/raster data/vector data/processed output
+
+        # Run environment setup if available
+        if [ -f "setup_student_environment.py" ]; then
+          python setup_student_environment.py || echo "⚠️  Setup script failed, continuing with tests"
+        fi
+
+        # Create minimal test data if setup fails
+        python -c "
+        import numpy as np
+        import rasterio
+        from rasterio.transform import from_bounds
+        from pathlib import Path
+
+        # Create test DEM
+        Path('data/raster').mkdir(parents=True, exist_ok=True)
+
+        # Generate synthetic elevation data
+        width, height = 1000, 1000
+        data = np.random.rand(height, width) * 1000 + 500  # Elevation 500-1500m
+
+        transform = from_bounds(-112.5, 33.0, -111.5, 34.0, width, height)
+
+        with rasterio.open(
+            'data/raster/test_dem.tif', 'w',
+            driver='GTiff',
+            height=height, width=width,
+            count=1, dtype=data.dtype,
+            crs='EPSG:4326',
+            transform=transform
+        ) as dst:
+            dst.write(data, 1)
+
+        print('✅ Test raster data created')
+        "
+
+    # Code Quality Checks
+    - name: Code Quality and Formatting Checks
+      run: |
+        echo "🔍 Running code quality checks..."
+
+        # Check if source directory exists
+        if [ -d "src" ]; then
+          echo "📁 Found src directory"
+
+          # Black formatting check
+          echo "🎨 Checking code formatting with Black..."
+          black --check --diff src/ || echo "⚠️  Code formatting issues found"
+
+          # Ruff linting
+          echo "🔍 Running Ruff linting..."
+          ruff check src/ || echo "⚠️  Linting issues found"
+
+          # MyPy type checking (allow failures for now)
+          echo "🏷️  Running type checks..."
+          mypy src/ || echo "⚠️  Type checking issues found"
+        else
+          echo "⚠️  No src directory found - skipping code quality checks"
+        fi
+
+    # Part 1: Core Raster Processing Tests (12 points)
+    - name: "Test Part 1: Raster Processing & COG Operations (12 pts)"
+      run: |
+        echo "🗺️  Testing Core Raster Processing Functions..."
+
+        # Test basic raster processing
+        python -m pytest tests/test_raster_processing.py -v \
+          --tb=short \
+          --timeout=300 \
+          --cov=src/rasterio_analysis/raster_processing \
+          --cov-report=term-missing \
+          || echo "❌ Raster processing tests failed"
+
+        # Test COG operations
+        python -m pytest tests/test_cog_operations.py -v \
+          --tb=short \
+          --timeout=300 \
+          --cov=src/rasterio_analysis/cog_operations \
+          --cov-report=term-missing \
+          || echo "❌ COG operations tests failed"
+
+    # Part 2: STAC Integration Tests (8 points)
+    - name: "Test Part 2: STAC Integration & Satellite Data (8 pts)"
+      run: |
+        echo "🛰️  Testing STAC Integration Functions..."
+
+        # Test STAC integration (may require network access)
+        python -m pytest tests/test_stac_integration.py -v \
+          --tb=short \
+          --timeout=600 \
+          --cov=src/rasterio_analysis/stac_integration \
+          --cov-report=term-missing \
+          -k "not test_requires_network" \
+          || echo "❌ STAC integration tests failed (some may require network)"
+
+    # Part 3: Advanced Processing Tests (10 points)
+    - name: "Test Part 3: Memory-Efficient Processing & Integration (10 pts)"
+      run: |
+        echo "🚀 Testing Advanced Processing Functions..."
+
+        # Test windowed processing
+        if [ -f "tests/test_windowed_processing.py" ]; then
+          python -m pytest tests/test_windowed_processing.py -v \
+            --tb=short \
+            --timeout=600 \
+            --cov=src/rasterio_analysis/windowed_processing \
+            --cov-report=term-missing \
+            || echo "❌ Windowed processing tests failed"
+        fi
+
+        # Test raster-vector integration
+        if [ -f "tests/test_raster_vector.py" ]; then
+          python -m pytest tests/test_raster_vector.py -v \
+            --tb=short \
+            --timeout=600 \
+            --cov=src/rasterio_analysis/raster_vector \
+            --cov-report=term-missing \
+            || echo "❌ Raster-vector integration tests failed"
+        fi
+
+    # Performance and Memory Tests
+    - name: Performance and Memory Benchmarks
+      run: |
+        echo "⚡ Running performance benchmarks..."
+
+        # Memory usage profiling
+        if [ -f "tests/test_performance.py" ]; then
+          python -m pytest tests/test_performance.py -v \
+            --tb=short \
+            --timeout=300 \
+            --benchmark-only \
+            --benchmark-sort=mean \
+            || echo "⚠️  Performance benchmarks failed"
+        fi
+
+        # Memory profiling for large raster operations
+        echo "🧠 Testing memory efficiency..."
+        python -c "
+        import psutil
+        import gc
+        process = psutil.Process()
+
+        print(f'Initial memory: {process.memory_info().rss / 1024 / 1024:.1f} MB')
+
+        try:
+            # Test memory-efficient raster processing
+            from src.rasterio_analysis.raster_processing import analyze_local_raster
+            if os.path.exists('data/raster/test_dem.tif'):
+                result = analyze_local_raster('data/raster/test_dem.tif')
+                print(f'✅ Memory test passed: {len(str(result))} bytes result')
+        except Exception as e:
+            print(f'⚠️  Memory test failed: {e}')
+
+        gc.collect()
+        print(f'Final memory: {process.memory_info().rss / 1024 / 1024:.1f} MB')
+        " || echo "⚠️  Memory profiling failed"
+
+    # Integration Tests
+    - name: Integration and Workflow Tests
+      run: |
+        echo "🔄 Running integration tests..."
+
+        # Run all tests together to check for interactions
+        python -m pytest tests/ -v \
+          --tb=short \
+          --timeout=900 \
+          --maxfail=10 \
+          --cov=src/rasterio_analysis \
+          --cov-report=term-missing \
+          --cov-report=xml \
+          || echo "❌ Integration tests completed with failures"
+
+    # Calculate Final Grade
+    - name: Calculate and Report Final Grade
+      run: |
+        echo "📊 Calculating final assignment grade..."
+
+        # Create grading script if it doesn't exist
+        python -c "
+        import subprocess
+        import sys
+        import json
+        from pathlib import Path
+
+        def run_test_group(test_pattern, max_points):
+            try:
+                result = subprocess.run([
+                    'python', '-m', 'pytest', f'tests/{test_pattern}',
+                    '--tb=no', '-q', '--json-report', '--json-report-file=test_results.json'
+                ], capture_output=True, text=True, timeout=300)
+
+                if Path('test_results.json').exists():
+                    with open('test_results.json') as f:
+                        data = json.load(f)
+
+                    passed = data['summary']['passed']
+                    total = data['summary']['total']
+                    if total > 0:
+                        score = (passed / total) * max_points
+                        print(f'✅ {test_pattern}: {passed}/{total} tests passed ({score:.1f}/{max_points} points)')
+                        return score
+
+                print(f'❌ {test_pattern}: No valid test results (0/{max_points} points)')
+                return 0
+            except Exception as e:
+                print(f'⚠️  {test_pattern}: Error running tests: {e} (0/{max_points} points)')
+                return 0
+
+        # Calculate scores for each part
+        part1_score = run_test_group('test_raster_processing.py test_cog_operations.py', 12)
+        part2_score = run_test_group('test_stac_integration.py', 8)
+        part3_score = run_test_group('test_windowed_processing.py test_raster_vector.py', 10)
+
+        total_score = part1_score + part2_score + part3_score
+        percentage = (total_score / 30) * 100
+
+        # Determine letter grade
+        if percentage >= 90:
+            letter_grade = 'A'
+        elif percentage >= 80:
+            letter_grade = 'B'
+        elif percentage >= 70:
+            letter_grade = 'C'
+        elif percentage >= 60:
+            letter_grade = 'D'
+        else:
+            letter_grade = 'F'
+
+        print()
+        print('=' * 60)
+        print('🎯 FINAL RASTER ANALYSIS GRADE REPORT')
+        print('=' * 60)
+        print(f'Part 1 - Raster Processing & COG: {part1_score:.1f}/12 points')
+        print(f'Part 2 - STAC Integration: {part2_score:.1f}/8 points')
+        print(f'Part 3 - Advanced Processing: {part3_score:.1f}/10 points')
+        print('-' * 40)
+        print(f'TOTAL SCORE: {total_score:.1f}/30 points ({percentage:.1f}%)')
+        print(f'LETTER GRADE: {letter_grade}')
+        print('=' * 60)
+
+        if total_score >= 18:
+            print('🎉 PASSING GRADE - Well done!')
+        else:
+            print('📚 NEEDS IMPROVEMENT - Review failed tests and resubmit')
+
+        # Save grade to file for potential use by other systems
+        with open('grade_report.txt', 'w') as f:
+            f.write(f'SCORE: {total_score:.1f}/30\\n')
+            f.write(f'PERCENTAGE: {percentage:.1f}%\\n')
+            f.write(f'GRADE: {letter_grade}\\n')
+        "
+
+    # Upload Test Results and Coverage
+    - name: Upload Test Results and Coverage
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-and-coverage
+        path: |
+          test_results.json
+          grade_report.txt
+          htmlcov/
+          .coverage
+        retention-days: 30
+
+    # Final Status Report
+    - name: Final Status Report
+      if: always()
+      run: |
+        echo "📋 Assignment Processing Complete"
+        echo "Check the test results above for your grade."
+        echo "Review any failed tests to improve your implementation."
+        echo ""
+        echo "💡 Tips for improvement:"
+        echo "  - Check function signatures match the test expectations"
+        echo "  - Ensure proper error handling for edge cases"
+        echo "  - Verify COG files have both tiling AND overviews"
+        echo "  - Test STAC functions with valid API endpoints"
+        echo "  - Use memory-efficient processing for large rasters"
+        echo ""
+        if [ -f "grade_report.txt" ]; then
+          echo "📊 Final Grade Summary:"
+          cat grade_report.txt
+        fi

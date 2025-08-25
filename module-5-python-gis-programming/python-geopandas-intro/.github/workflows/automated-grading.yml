@@ -1,0 +1,644 @@
+name: GeoPandas Spatial Analysis - Automated Grading Pipeline
+
+on:
+  push:
+    branches: [ main, geopandas-assignment, assignment-* ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  PYTHON_VERSION: "3.13"
+  UV_VERSION: "0.1.18"
+
+jobs:
+  spatial-analysis-assessment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+        os: [ubuntu-latest]
+      fail-fast: false
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Install System Spatial Libraries
+      run: |
+        echo "Installing GDAL, GEOS, PROJ spatial libraries..."
+        sudo apt-get update
+        sudo apt-get install -y \
+          gdal-bin \
+          libgdal-dev \
+          libgeos-dev \
+          libproj-dev \
+          proj-bin \
+          proj-data \
+          libspatialindex-dev \
+          build-essential
+
+        # Verify spatial library installation
+        echo "GDAL Version:"
+        gdal-config --version
+        echo "GEOS Config:"
+        geos-config --version || echo "geos-config not found"
+        echo "PROJ Version:"
+        proj || echo "proj command not found"
+
+    - name: Set Spatial Environment Variables
+      run: |
+        echo "Setting spatial library environment variables..."
+        echo "GDAL_DATA=$(gdal-config --datadir)" >> $GITHUB_ENV
+        echo "PROJ_LIB=/usr/share/proj" >> $GITHUB_ENV
+        echo "GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so" >> $GITHUB_ENV
+
+    - name: Install uv Package Manager
+      uses: astral-sh/setup-uv@v1
+      with:
+        version: ${{ env.UV_VERSION }}
+        enable-cache: true
+
+    - name: Setup Python Environment
+      run: |
+        uv python install ${{ matrix.python-version }}
+        uv python pin ${{ matrix.python-version }}
+
+    - name: Create Virtual Environment
+      run: |
+        uv venv --python ${{ matrix.python-version }}
+        echo "VIRTUAL_ENV=.venv" >> $GITHUB_ENV
+        echo "$PWD/.venv/bin" >> $GITHUB_PATH
+
+    - name: Install Spatial Dependencies
+      run: |
+        uv pip install --upgrade pip
+
+        # Install spatial dependencies with specific versions for stability
+        echo "Installing core spatial analysis dependencies..."
+        uv pip install \
+          "numpy>=1.26.2,<2.0" \
+          "pandas>=2.1.4,<3.0" \
+          "shapely>=2.0.0,<3.0" \
+          "pyproj>=3.6.0,<4.0" \
+          "fiona>=1.9.0,<2.0" \
+          "rtree>=1.2.0,<2.0"
+
+        # Install GeoPandas and related packages
+        echo "Installing GeoPandas and visualization libraries..."
+        uv pip install \
+          "geopandas>=0.14.1,<0.15.0" \
+          "matplotlib>=3.8.2,<4.0" \
+          "contextily>=1.4.0,<2.0" \
+          "folium>=0.15.0,<1.0" \
+          "mapclassify>=2.6.0,<3.0"
+
+        # Install development and testing dependencies
+        echo "Installing development dependencies..."
+        uv sync --all-extras --dev
+      timeout-minutes: 8
+
+    - name: Verify Spatial Installation
+      run: |
+        echo "Verifying spatial analysis environment..."
+        python --version
+        which python
+
+        # Test core imports
+        python -c "import numpy; print(f'NumPy: {numpy.__version__}')"
+        python -c "import pandas; print(f'Pandas: {pandas.__version__}')"
+        python -c "import shapely; print(f'Shapely: {shapely.__version__}')"
+        python -c "import fiona; print(f'Fiona: {fiona.__version__}')"
+        python -c "import pyproj; print(f'PyProj: {pyproj.__version__}')"
+        python -c "import geopandas; print(f'GeoPandas: {geopandas.__version__}')"
+
+        # Test spatial functionality
+        python -c "
+import geopandas as gpd
+from shapely.geometry import Point
+import numpy as np
+
+# Create test spatial data
+test_points = gpd.GeoDataFrame({
+    'id': [1, 2, 3],
+    'geometry': [Point(0, 0), Point(1, 1), Point(2, 2)]
+}, crs='EPSG:4326')
+
+# Test basic spatial operations
+print('✅ Spatial data creation: OK')
+print(f'CRS: {test_points.crs}')
+print(f'Geometry types: {test_points.geometry.geom_type.unique()}')
+
+# Test coordinate transformation
+web_mercator = test_points.to_crs('EPSG:3857')
+print('✅ Coordinate transformation: OK')
+
+# Test spatial operations
+buffered = test_points.buffer(0.1)
+print('✅ Spatial buffering: OK')
+
+print('🗺️  GeoPandas spatial environment ready!')
+"
+
+        echo "📦 Installed packages:"
+        uv pip list
+
+    - name: Code Quality - Black Formatting Check
+      id: black-check
+      run: |
+        echo "Running Black formatting check for spatial analysis code..."
+        uv run black --check --diff src/ tests/ || {
+          echo "black-failed=true" >> $GITHUB_OUTPUT
+          echo "❌ Code formatting issues found. Run 'black src/ tests/' to fix."
+          exit 1
+        }
+        echo "✅ Spatial code formatting passed"
+      continue-on-error: true
+
+    - name: Code Quality - Ruff Linting
+      id: ruff-check
+      run: |
+        echo "Running Ruff linting for spatial analysis code..."
+        uv run ruff check src/ tests/ --output-format=github || {
+          echo "ruff-failed=true" >> $GITHUB_OUTPUT
+          echo "❌ Spatial code linting issues found."
+          exit 1
+        }
+        echo "✅ Spatial code linting passed"
+      continue-on-error: true
+
+    - name: Code Quality - MyPy Type Checking
+      id: mypy-check
+      run: |
+        echo "Running MyPy type checking for spatial analysis code..."
+        uv run mypy src/ --no-error-summary || {
+          echo "mypy-failed=true" >> $GITHUB_OUTPUT
+          echo "❌ Spatial code type checking issues found."
+          exit 1
+        }
+        echo "✅ Spatial code type checking passed"
+      continue-on-error: true
+
+    - name: Security Scan - Bandit
+      id: bandit-check
+      run: |
+        echo "Running Bandit security scan..."
+        uv run bandit -r src/ -f json -o bandit-report.json || {
+          echo "bandit-failed=true" >> $GITHUB_OUTPUT
+          echo "⚠️  Security issues found"
+          exit 1
+        }
+        echo "✅ Security scan passed"
+      continue-on-error: true
+
+    - name: Run Spatial Analysis Unit Tests
+      id: pytest-run
+      run: |
+        echo "Running spatial analysis tests with coverage..."
+        uv run pytest tests/ \
+          --cov=src \
+          --cov-report=xml \
+          --cov-report=html \
+          --cov-report=term \
+          --cov-fail-under=60 \
+          --junitxml=test-results.xml \
+          --tb=short \
+          -v \
+          --durations=10 \
+          -m "not slow" || {
+            echo "pytest-failed=true" >> $GITHUB_OUTPUT
+            echo "❌ Some spatial analysis tests failed"
+        }
+
+        # Extract test statistics
+        if [ -f test-results.xml ]; then
+          python -c "
+import xml.etree.ElementTree as ET
+try:
+    tree = ET.parse('test-results.xml')
+    root = tree.getroot()
+    tests = root.get('tests', '0')
+    failures = root.get('failures', '0')
+    errors = root.get('errors', '0')
+    passed = int(tests) - int(failures) - int(errors)
+    print(f'🧪 Spatial Tests: {tests}, Passed: {passed}, Failed: {failures}, Errors: {errors}')
+    with open('$GITHUB_OUTPUT', 'a') as f:
+        f.write(f'tests-total={tests}\n')
+        f.write(f'tests-passed={passed}\n')
+        f.write(f'tests-failed={failures}\n')
+        f.write(f'tests-errors={errors}\n')
+except Exception as e:
+    print(f'Error parsing spatial test results: {e}')
+"
+        fi
+      continue-on-error: true
+
+    - name: Run Spatial Performance Benchmarks
+      id: benchmark-run
+      run: |
+        echo "Running spatial analysis performance benchmarks..."
+        uv run pytest benchmarks/ \
+          --benchmark-only \
+          --benchmark-json=benchmark.json \
+          --benchmark-min-rounds=3 \
+          --benchmark-max-time=45 \
+          --benchmark-sort=mean || {
+            echo "benchmark-failed=true" >> $GITHUB_OUTPUT
+            echo "⚠️  Spatial performance benchmarks failed"
+        }
+
+        if [ -f benchmark.json ]; then
+          echo "✅ Spatial performance benchmarks completed"
+          python -c "
+import json
+try:
+    with open('benchmark.json', 'r') as f:
+        data = json.load(f)
+        benchmarks = data.get('benchmarks', [])
+        print(f'📊 Completed {len(benchmarks)} spatial performance benchmarks')
+
+        # Report on specific spatial operations
+        spatial_benchmarks = [b for b in benchmarks if 'spatial' in b.get('name', '').lower()]
+        if spatial_benchmarks:
+            print(f'🗺️  Spatial-specific benchmarks: {len(spatial_benchmarks)}')
+
+        with open('$GITHUB_OUTPUT', 'a') as f:
+            f.write(f'benchmark-count={len(benchmarks)}\n')
+            f.write(f'spatial-benchmarks={len(spatial_benchmarks)}\n')
+except Exception as e:
+    print(f'Error reading spatial benchmark results: {e}')
+"
+        fi
+      continue-on-error: true
+
+    - name: Test Spatial Visualization Generation
+      id: visualization-test
+      run: |
+        echo "Testing spatial visualization capabilities..."
+        python -c "
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend
+import matplotlib.pyplot as plt
+import geopandas as gpd
+from shapely.geometry import Point
+import numpy as np
+import tempfile
+import os
+
+try:
+    # Create test spatial data
+    test_data = gpd.GeoDataFrame({
+        'name': ['Location A', 'Location B', 'Location C'],
+        'value': [10, 20, 30],
+        'geometry': [Point(-110, 33), Point(-111, 34), Point(-112, 35)]
+    }, crs='EPSG:4326')
+
+    # Test basic plotting
+    fig, ax = plt.subplots(figsize=(8, 6))
+    test_data.plot(ax=ax, color='blue', markersize=50)
+    ax.set_title('Spatial Visualization Test')
+
+    # Save to temporary file
+    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+        fig.savefig(tmp.name, dpi=150, bbox_inches='tight')
+        file_size = os.path.getsize(tmp.name)
+        print(f'✅ Spatial visualization test successful: {file_size} bytes')
+        os.unlink(tmp.name)
+
+    plt.close(fig)
+
+    # Test coordinate transformation visualization
+    transformed = test_data.to_crs('EPSG:3857')
+    fig2, ax2 = plt.subplots(figsize=(8, 6))
+    transformed.plot(ax=ax2, color='red', markersize=50)
+    ax2.set_title('Transformed Coordinates Test')
+    plt.close(fig2)
+
+    print('🎨 Spatial visualization capabilities verified')
+
+except Exception as e:
+    print(f'❌ Spatial visualization test failed: {e}')
+    exit(1)
+"
+      continue-on-error: true
+
+    - name: Calculate Spatial Analysis Grade
+      id: grade-calculation
+      run: |
+        echo "Calculating spatial analysis grade..."
+        python .github/scripts/calculate_grade.py || {
+          echo "grade-calculation-failed=true" >> $GITHUB_OUTPUT
+          echo "❌ Spatial grade calculation failed"
+        }
+
+        # Extract spatial-specific grade information
+        if [ -f grade_report.json ]; then
+          python -c "
+import json
+try:
+    with open('grade_report.json', 'r') as f:
+        grade = json.load(f)
+        total_score = grade.get('total_score', 0)
+        max_score = 30
+        percentage = round((total_score / max_score) * 100, 1)
+
+        print(f'🗺️  Spatial Analysis Score: {total_score}/{max_score} ({percentage}%)')
+
+        # Set outputs for later steps
+        with open('$GITHUB_OUTPUT', 'a') as f:
+            f.write(f'final-score={total_score}\n')
+            f.write(f'max-score={max_score}\n')
+            f.write(f'percentage={percentage}\n')
+
+        # Determine pass/fail for spatial analysis
+        passing_grade = 18  # 60% of 30 points
+        status = 'PASS' if total_score >= passing_grade else 'FAIL'
+        with open('$GITHUB_OUTPUT', 'a') as f:
+            f.write(f'grade-status={status}\n')
+
+        # Report spatial-specific component scores
+        components = grade.get('component_scores', {})
+        print(f'📊 Spatial Component Breakdown:')
+        print(f'   Spatial Operations: {components.get(\"spatial_correctness\", 0)}/15')
+        print(f'   Performance: {components.get(\"performance\", 0)}/5')
+        print(f'   Code Quality: {components.get(\"code_quality\", 0)}/5')
+        print(f'   Visualization: {components.get(\"visualization_quality\", 0)}/5')
+
+except Exception as e:
+    print(f'Error processing spatial grade report: {e}')
+    with open('$GITHUB_OUTPUT', 'a') as f:
+        f.write('grade-status=ERROR\n')
+"
+        fi
+      continue-on-error: true
+
+    - name: Upload Spatial Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: spatial-test-results-${{ matrix.python-version }}
+        path: |
+          test-results.xml
+          coverage.xml
+          htmlcov/
+          benchmark.json
+          grade_report.json
+          bandit-report.json
+        retention-days: 30
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      if: always() && steps.pytest-run.outcome != 'skipped'
+      with:
+        file: ./coverage.xml
+        flags: spatial-analysis
+        name: geopandas-spatial-tests
+        fail_ci_if_error: false
+        verbose: true
+
+    - name: Comment on PR with Spatial Results
+      if: github.event_name == 'pull_request' && always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+
+          // Read spatial grade report if available
+          let gradeData = null;
+          try {
+            if (fs.existsSync('grade_report.json')) {
+              gradeData = JSON.parse(fs.readFileSync('grade_report.json', 'utf8'));
+            }
+          } catch (error) {
+            console.log('Could not read spatial grade report:', error.message);
+          }
+
+          // Get step outputs
+          const steps = ${{ toJSON(steps) }};
+          const finalScore = steps['grade-calculation'].outputs['final-score'] || '0';
+          const maxScore = steps['grade-calculation'].outputs['max-score'] || '30';
+          const percentage = steps['grade-calculation'].outputs['percentage'] || '0';
+          const gradeStatus = steps['grade-calculation'].outputs['grade-status'] || 'UNKNOWN';
+
+          // Build spatial-specific comment body
+          let commentBody = `## 🗺️ Spatial Analysis - Automated Grading Results\n\n`;
+
+          // Overall score
+          const statusEmoji = gradeStatus === 'PASS' ? '✅' : gradeStatus === 'FAIL' ? '❌' : '⚠️';
+          commentBody += `### ${statusEmoji} Overall Spatial Analysis Score: ${finalScore}/${maxScore} (${percentage}%)\n\n`;
+
+          // Spatial component breakdown
+          commentBody += `### 📊 Spatial Analysis Component Scores:\n\n`;
+
+          if (gradeData && gradeData.component_scores) {
+            const components = gradeData.component_scores;
+            commentBody += `| Component | Score | Status |\n`;
+            commentBody += `|-----------|--------|--------|\n`;
+
+            const spatialComponents = {
+              'spatial_correctness': { name: 'Spatial Operations', max: 15 },
+              'performance': { name: 'Performance', max: 5 },
+              'code_quality': { name: 'Code Quality', max: 5 },
+              'visualization_quality': { name: 'Visualization', max: 5 }
+            };
+
+            for (const [key, details] of Object.entries(spatialComponents)) {
+              const score = components[key] || 0;
+              const status = score >= (details.max * 0.6) ? '✅' : '❌';
+              commentBody += `| ${details.name} | ${score}/${details.max} | ${status} |\n`;
+            }
+          }
+
+          // Spatial quality checks summary
+          commentBody += `\n### 🔍 Spatial Code Quality Checks:\n\n`;
+
+          const checks = [
+            { name: 'Code Formatting (Black)', step: 'black-check', failed: 'black-failed' },
+            { name: 'Linting (Ruff)', step: 'ruff-check', failed: 'ruff-failed' },
+            { name: 'Type Checking (MyPy)', step: 'mypy-check', failed: 'mypy-failed' },
+            { name: 'Security Scan (Bandit)', step: 'bandit-check', failed: 'bandit-failed' }
+          ];
+
+          for (const check of checks) {
+            const stepOutput = steps[check.step]?.outputs || {};
+            const failed = stepOutput[check.failed] === 'true';
+            const status = failed ? '❌' : '✅';
+            commentBody += `- ${status} ${check.name}\n`;
+          }
+
+          // Spatial test results
+          const testsTotal = steps['pytest-run'].outputs['tests-total'] || '0';
+          const testsPassed = steps['pytest-run'].outputs['tests-passed'] || '0';
+          const testsFailed = steps['pytest-run'].outputs['tests-failed'] || '0';
+
+          commentBody += `\n### 🧪 Spatial Analysis Test Results:\n\n`;
+          commentBody += `- **Total Tests:** ${testsTotal}\n`;
+          commentBody += `- **Passed:** ${testsPassed}\n`;
+          commentBody += `- **Failed:** ${testsFailed}\n`;
+
+          // Spatial performance benchmarks
+          const benchmarkCount = steps['benchmark-run'].outputs['benchmark-count'] || '0';
+          const spatialBenchmarkCount = steps['benchmark-run'].outputs['spatial-benchmarks'] || '0';
+          commentBody += `\n### ⚡ Spatial Performance Benchmarks:\n\n`;
+          commentBody += `- **Total Benchmarks:** ${benchmarkCount}\n`;
+          commentBody += `- **Spatial-Specific Benchmarks:** ${spatialBenchmarkCount}\n`;
+
+          // Spatial visualization test
+          commentBody += `\n### 🎨 Spatial Visualization:\n\n`;
+          if (steps['visualization-test'].outcome === 'success') {
+            commentBody += `- ✅ Map generation and visualization tests passed\n`;
+          } else {
+            commentBody += `- ❌ Map generation tests failed - check your visualization functions\n`;
+          }
+
+          // Spatial-specific feedback
+          if (gradeData && gradeData.feedback && gradeData.feedback.length > 0) {
+            commentBody += `\n### 🗺️ Spatial Analysis Feedback:\n\n`;
+            for (const feedback of gradeData.feedback) {
+              commentBody += `- ${feedback}\n`;
+            }
+          }
+
+          // Next steps for spatial analysis
+          commentBody += `\n### 📝 Next Steps for Spatial Analysis:\n\n`;
+          if (gradeStatus === 'PASS') {
+            commentBody += `🎉 **Excellent spatial work!** Your GeoPandas assignment meets all requirements.\n`;
+            commentBody += `🗺️ Consider creating additional visualizations and interactive maps to showcase your work.\n\n`;
+          } else {
+            commentBody += `⚠️ **Spatial Analysis Needs Work:** Focus on the failing components above.\n`;
+            commentBody += `🔧 **Common spatial issues:**\n`;
+            commentBody += `   - Check coordinate reference systems (CRS) in your functions\n`;
+            commentBody += `   - Ensure geometric operations handle edge cases\n`;
+            commentBody += `   - Verify spatial joins produce correct results\n`;
+            commentBody += `   - Test visualizations generate proper maps\n\n`;
+          }
+
+          commentBody += `**Timestamp:** ${new Date().toISOString()}\n`;
+          commentBody += `**Commit:** ${context.sha.substring(0, 7)}\n`;
+
+          // Post comment
+          try {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });
+            console.log('Successfully posted spatial analysis grade comment');
+          } catch (error) {
+            console.error('Error posting spatial comment:', error);
+          }
+
+    - name: Set Spatial Analysis Job Status
+      if: always()
+      run: |
+        echo "🗺️ Spatial Analysis Job completion status:"
+        echo "- Black formatting: ${{ steps.black-check.outcome }}"
+        echo "- Ruff linting: ${{ steps.ruff-check.outcome }}"
+        echo "- MyPy type checking: ${{ steps.mypy-check.outcome }}"
+        echo "- Bandit security: ${{ steps.bandit-check.outcome }}"
+        echo "- Spatial tests: ${{ steps.pytest-run.outcome }}"
+        echo "- Performance benchmarks: ${{ steps.benchmark-run.outcome }}"
+        echo "- Visualization tests: ${{ steps.visualization-test.outcome }}"
+        echo "- Grade calculation: ${{ steps.grade-calculation.outcome }}"
+
+        # Determine overall spatial analysis success
+        GRADE_STATUS="${{ steps.grade-calculation.outputs.grade-status }}"
+
+        if [ "$GRADE_STATUS" = "PASS" ]; then
+          echo "🎉 Spatial Analysis PASSED! Great work with GeoPandas!"
+          exit 0
+        elif [ "$GRADE_STATUS" = "FAIL" ]; then
+          echo "❌ Spatial Analysis FAILED - review feedback and improve your spatial functions"
+          exit 1
+        else
+          echo "⚠️  Spatial analysis status unclear - check logs above"
+          exit 1
+        fi
+
+  # Optional: Spatial integration testing job
+  spatial-integration-test:
+    runs-on: ubuntu-latest
+    needs: spatial-analysis-assessment
+    if: github.event_name == 'pull_request' && success()
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Install System Spatial Libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gdal-bin libgdal-dev libgeos-dev libproj-dev
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v1
+
+    - name: Setup Python and Dependencies
+      run: |
+        uv python install 3.13
+        uv sync --all-extras
+
+    - name: Run Spatial Integration Tests
+      run: |
+        echo "Running spatial analysis integration tests..."
+        uv run python -c "
+import geopandas as gpd
+from geodatasets import get_path
+import matplotlib
+matplotlib.use('Agg')
+
+try:
+    # Test with real-world data
+    world = gpd.read_file(get_path('naturalearth.land'))
+    print(f'✅ Loaded real spatial data: {len(world)} features')
+
+    # Test basic spatial operations
+    bounds = world.total_bounds
+    print(f'✅ Spatial bounds: {bounds}')
+
+    # Test coordinate transformation
+    world_3857 = world.to_crs('EPSG:3857')
+    print(f'✅ Coordinate transformation successful')
+
+    # Test spatial join
+    world_sample = world.sample(n=min(10, len(world)))
+    buffered = world_sample.buffer(100000)  # 100km buffer
+    print(f'✅ Spatial buffering successful')
+
+    print('🌍 Spatial integration tests completed successfully!')
+
+except Exception as e:
+    print(f'❌ Spatial integration test failed: {e}')
+    exit(1)
+"
+
+  # Summary job that always runs
+  spatial-grade-summary:
+    runs-on: ubuntu-latest
+    needs: [spatial-analysis-assessment]
+    if: always()
+
+    steps:
+    - name: Spatial Analysis Grade Summary
+      run: |
+        echo "=== SPATIAL ANALYSIS GRADING SUMMARY ==="
+        echo "Assessment Status: ${{ needs.spatial-analysis-assessment.result }}"
+
+        if [ "${{ needs.spatial-analysis-assessment.result }}" = "success" ]; then
+          echo "✅ Spatial analysis passed - GeoPandas assignment meets requirements"
+          echo "🗺️ Your spatial analysis functions are working correctly!"
+          echo "🎨 Maps and visualizations are generating properly"
+        else
+          echo "❌ Spatial analysis failed - Review feedback and resubmit"
+          echo "🔧 Check your GeoPandas functions for spatial correctness"
+          echo "📊 Verify coordinate reference system handling"
+          echo "🎯 Test spatial joins and geometric operations"
+        fi
+
+        echo "Check the detailed results in the spatial-analysis-assessment job logs."
+        echo "=========================================="
