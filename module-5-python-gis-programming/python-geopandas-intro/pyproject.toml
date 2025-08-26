@@ -1,0 +1,171 @@
+[project]
+name = "gist-604b-python-pandas"
+version = "1.0.0"
+description = "GIST 604B Module 5 - Python Pandas Assignment for GIS Data Analysis"
+readme = "README.md"
+authors = [
+    { name = "GIST 604B Student", email = "student@example.edu" }
+]
+requires-python = ">=3.11"
+keywords = ["gis", "pandas", "data-analysis", "education", "assignment"]
+
+# Core dependencies for the assignment
+dependencies = [
+    "pandas>=2.0.0,<3.0.0",
+    "numpy>=1.24.0,<2.0.0",
+]
+
+# Optional dependency groups for different use cases
+[project.optional-dependencies]
+# Development and testing tools
+test = [
+    "pytest>=7.0.0,<8.0.0",
+    "pytest-cov>=4.0.0,<5.0.0",
+    "pytest-html>=3.1.0,<4.0.0",
+    "pytest-sugar>=0.9.0,<1.0.0",
+]
+
+# Interactive development tools
+dev = [
+    "ipython>=8.0.0,<9.0.0",
+    "jupyter>=1.0.0,<2.0.0",
+    "notebook>=7.0.0,<8.0.0",
+]
+
+# All optional dependencies for complete environment
+all = [
+    "pytest>=7.0.0,<8.0.0",
+    "pytest-cov>=4.0.0,<5.0.0",
+    "pytest-html>=3.1.0,<4.0.0",
+    "pytest-sugar>=0.9.0,<1.0.0",
+    "ipython>=8.0.0,<9.0.0",
+    "jupyter>=1.0.0,<2.0.0",
+    "notebook>=7.0.0,<8.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/classroom/gist-604b-python-pandas"
+"Repository" = "https://github.com/classroom/gist-604b-python-pandas"
+"Issues" = "https://github.com/classroom/gist-604b-python-pandas/issues"
+
+# Tool configurations
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+]
+markers = [
+    "unit: Unit tests for individual functions",
+    "integration: Integration tests for function combinations",
+    "slow: Tests that take longer to run",
+]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "grade.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+precision = 2
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+extend-exclude = [
+    "__pycache__",
+    ".pytest_cache",
+    ".coverage",
+    "htmlcov",
+    "*.egg-info",
+    ".venv",
+    "grade.py",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # Pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # Line too long (handled by formatter)
+    "B008", # Do not perform function calls in argument defaults
+    "F401", # Imported but unused (common in assignment templates)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Assignment metadata for instructors and tools
+[tool.assignment]
+course = "GIST 604B - Open Source GIS Programming"
+module = "5"
+title = "Python Pandas for GIS Data Analysis"
+semester = "Fall 2024"
+estimated_hours = "2-3"
+difficulty = "intermediate"
+functions_required = [
+    "load_and_explore_gis_data",
+    "filter_environmental_data",
+    "calculate_station_statistics",
+    "join_station_data",
+    "save_processed_data"
+]
+points_total = 20
+grading_categories = [
+    {name = "Load and Explore Data", points = 4},
+    {name = "Filter Environmental Data", points = 4},
+    {name = "Calculate Station Statistics", points = 4},
+    {name = "Join Station Data", points = 4},
+    {name = "Save Processed Data", points = 2},
+    {name = "Integration Tests", points = 2}
+]
+
+[dependency-groups]
+dev = [
+    "ipython>=8.37.0",
+    "jupyter>=1.1.1",
+    "notebook>=7.4.5",
+]
+test = [
+    "pytest>=7.4.4",
+    "pytest-cov>=4.1.0",
+    "pytest-html>=3.2.0",
+    "pytest-sugar>=0.9.7",
+]
