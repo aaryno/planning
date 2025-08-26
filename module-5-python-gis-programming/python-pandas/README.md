@@ -19,7 +19,10 @@ Learn the **essential pandas skills** you need for GIS data analysis! This assig
 - Export your results for use in QGIS or other GIS software
 - **Unit testing with pytest** - professional testing practices used in industry
 
-**Time commitment:** About 3-4 hours total (includes learning unit testing)
+**🎓 Learning Approach:**
+This assignment uses **interactive Jupyter notebooks** to teach you each function step-by-step, then you implement the actual code in Python files for grading. This mirrors real-world data science workflows where you prototype in notebooks before writing production code!
+
+**Time commitment:** About 3-4 hours total (includes notebook learning and testing)
 
 ---
 
@@ -98,9 +101,9 @@ python-pandas/
 │   ├── weather_stations.csv      # Station location data
 │   ├── temperature_readings.csv  # Daily temperature measurements
 │   └── data_dictionary.md        # Explains what each column means
-├── pytest.ini                   # Test configuration  
-├── pyproject.toml               # Modern Python project configuration (replaces requirements.txt)
-├── uv.lock                      # Locked dependency versions for reproducible builds
+├── pytest.ini                    # Test configuration  
+├── pyproject.toml                # Modern Python project configuration (replaces requirements.txt)
+├── uv.lock                       # Locked dependency versions for reproducible builds
 ├── requirements.txt              # Legacy dependency file (kept for compatibility)
 └── .github/workflows/            # 🤖 Automated grading (CI/CD)
 ```
@@ -109,17 +112,31 @@ python-pandas/
 
 ## 📝 Your Assignment Tasks
 
-You need to implement **5 functions** in the file `src/pandas_basics.py`. Each function builds on the previous one, so complete them in order.
+You need to implement **5 functions** in the file `src/pandas_basics.py`. Each function has a corresponding Jupyter notebook in the `notebooks/` directory that teaches you how to build it step by step.
+
+**📚 Learning Process:**
+1. **Learn**: Open the notebook for each function to understand how it works
+2. **Implement**: Write your code in `src/pandas_basics.py` (replace the TODO comments)
+3. **Test**: Run pytest to verify your implementation works correctly
+
+**🎯 Your Task:** The notebooks show you HOW to build each function, but you must implement the actual code in `src/pandas_basics.py` to pass the unit tests. The notebooks are for learning - the assignment requires working code in the .py file!
 
 ### 🔧 Part 1: Load and Explore Data (4 points)
-**Function:** `load_and_explore_gis_data(file_path)`
+**Function:** `load_and_explore_gis_data(file_path)`  
+📚 **Learning Notebook:** `notebooks/01_function_load_and_explore_gis_data.ipynb`
 
-**What to do:**
+**What to implement in `src/pandas_basics.py`:**
 1. Use `pd.read_csv()` to load a CSV file
 2. Print basic information about the dataset (shape, columns, data types)
 3. Display the first 5 rows using `.head()`
 4. Show summary statistics using `.describe()`
-5. Handle any obvious data issues
+5. Handle file not found errors and other issues
+6. Return the loaded DataFrame
+
+**Test your function:**
+```bash
+uv run pytest tests/test_pandas_basics.py::test_load_and_explore_gis_data -v
+```
 
 **Example output:**
 ```
@@ -134,14 +151,21 @@ First 5 rows:
 ```
 
 ### 📊 Part 2: Filter Environmental Data (4 points)
-**Function:** `filter_environmental_data(df, min_temp=15, max_temp=30, quality="good")`
+**Function:** `filter_environmental_data(df, min_temp=15, max_temp=30, quality="good")`  
+📚 **Learning Notebook:** `notebooks/02_function_filter_environmental_data.ipynb`
 
-**What to do:**
-1. Filter the DataFrame to show only rows where:
+**What to implement in `src/pandas_basics.py`:**
+1. Filter the DataFrame using boolean indexing to show only rows where:
    - Temperature is between min_temp and max_temp
    - Data quality equals the specified quality level
-2. Print how many rows were kept vs. removed
-3. Return the filtered DataFrame
+2. Handle input validation and missing columns
+3. Print filtering statistics (rows kept vs. removed)
+4. Return the filtered DataFrame
+
+**Test your function:**
+```bash
+uv run pytest tests/test_pandas_basics.py::test_filter_environmental_data -v
+```
 
 **Example output:**
 ```
@@ -153,15 +177,22 @@ Filters applied:
 - Data quality = 'good'
 ```
 
-### 📈 Part 3: Calculate Basic Statistics (4 points)
-**Function:** `calculate_station_statistics(df)`
+### 📈 Part 3: Calculate Station Statistics (4 points)
+**Function:** `calculate_station_statistics(df)`  
+📚 **Learning Notebook:** `notebooks/03_function_calculate_station_statistics.ipynb`
 
-**What to do:**
+**What to implement in `src/pandas_basics.py`:**
 1. Group the data by station_id using `.groupby()`
-2. Calculate mean temperature and humidity for each station
-3. Count how many readings each station has
-4. Create a summary DataFrame with these statistics
-5. Show the station with highest and lowest average temperature
+2. Calculate mean temperature and humidity for each station (rounded to 1 decimal)
+3. Count how many readings each station has using `.size()`
+4. Create a summary DataFrame with columns: station_id, avg_temperature, avg_humidity, reading_count
+5. Find and report the hottest and coolest stations
+6. Return the statistics DataFrame
+
+**Test your function:**
+```bash
+uv run pytest tests/test_pandas_basics.py::test_calculate_station_statistics -v
+```
 
 **Example output:**
 ```
@@ -176,13 +207,21 @@ Coolest station: STN_012 (avg: 18.7°C)
 ```
 
 ### 🔗 Part 4: Join Station Data (4 points)
-**Function:** `join_station_data(stations_df, readings_df)`
+**Function:** `join_station_data(stations_df, readings_df)`  
+📚 **Learning Notebook:** `notebooks/04_function_join_station_data.ipynb`
 
-**What to do:**
-1. Use `pd.merge()` to join the stations and readings DataFrames
+**What to implement in `src/pandas_basics.py`:**
+1. Use `pd.merge()` with a LEFT JOIN to preserve all readings
 2. Join on the common column `station_id`
-3. Print information about the join results
-4. Return the combined DataFrame
+3. Analyze the relationship between datasets (which stations match)
+4. Report join results (rows preserved, new columns added)
+5. Handle cases where some readings might not have station info
+6. Return the combined DataFrame
+
+**Test your function:**
+```bash
+uv run pytest tests/test_pandas_basics.py::test_join_station_data -v
+```
 
 **Example output:**
 ```
@@ -194,111 +233,101 @@ New columns added: station_name, latitude, longitude, elevation_m
 ```
 
 ### 💾 Part 5: Save Processed Data (2 points)
-**Function:** `save_processed_data(df, output_file)`
+**Function:** `save_processed_data(df, output_file)`  
+📚 **Learning Notebook:** `notebooks/05_function_save_processed_data.ipynb`
 
-**What to do:**
-1. Save the DataFrame to a CSV file using `.to_csv()`
-2. Include proper headers and formatting
-3. Print confirmation that the file was saved
-4. Show the file size and location
+**What to implement in `src/pandas_basics.py`:**
+1. Create output directory if it doesn't exist
+2. Save the DataFrame to CSV using `.to_csv()` with good formatting
+3. Validate the saved file by reading it back
+4. Report file size, location, and rows saved
+5. Handle errors (permissions, disk space, invalid paths)
+6. Return True for success, False for failure
+
+**Test your function:**
+```bash
+uv run pytest tests/test_pandas_basics.py::test_save_processed_data -v
+```
 
 ### Code Quality (2 points)
-Clean, readable code with good comments and proper error handling.
+Clean, readable code following the patterns shown in the notebooks.
 
 ---
 
-## 🧪 Learning Professional Unit Testing with pytest
+## 🧪 Professional Development Workflow
 
-**Important Learning Objective**: This assignment teaches you **unit testing** - a critical professional skill where you write tests to verify your code works correctly.
+**Important Learning Objective**: This assignment teaches you professional development practices including unit testing and the notebook-to-code workflow used in industry.
 
-### Step 1: Install Testing Dependencies
-
-```bash
-# In your Codespace or local environment with uv
-uv sync --group test
-
-# This automatically installs pytest, pandas, and all testing dependencies
-# No need to manually install individual packages!
-```
-
-### Step 2: Understanding Unit Tests
-
-Look at `tests/test_pandas_basics.py` to see how professional unit tests work:
-
-```python
-# Example unit test structure
-import pytest
-import pandas as pd
-from src.pandas_basics import load_and_explore_gis_data
-
-def test_load_and_explore_gis_data():
-    """Test that function loads CSV and returns correct DataFrame"""
-    # Arrange: Set up test data
-    test_file = 'data/weather_stations.csv'
-    
-    # Act: Run the function
-    result = load_and_explore_gis_data(test_file)
-    
-    # Assert: Check the results
-    assert isinstance(result, pd.DataFrame)
-    assert len(result) > 0
-    assert 'station_id' in result.columns
-```
-
-### Step 3: Run Unit Tests as You Develop
-
-**This is how professional developers work!** Test each function as you implement it:
+### Step 1: Learning with Notebooks
 
 ```bash
-# Run all tests with uv
-uv run pytest tests/
+# Navigate to the notebooks directory
+cd notebooks/
 
-# Run tests for a specific function
+# Open Jupyter in your browser (if using local setup)
+uv run jupyter notebook
+
+# In Codespaces, notebooks open directly in VS Code
+```
+
+**Work through notebooks in order:**
+1. `01_function_load_and_explore_gis_data.ipynb`
+2. `02_function_filter_environmental_data.ipynb`  
+3. `03_function_calculate_station_statistics.ipynb`
+4. `04_function_join_station_data.ipynb`
+5. `05_function_save_processed_data.ipynb`
+
+### Step 2: Implement Functions
+
+After learning from each notebook:
+1. Open `src/pandas_basics.py`
+2. Find the corresponding function
+3. Replace TODO comments with your implementation
+4. Test immediately (see Step 3)
+
+### Step 3: Test-Driven Development
+
+**Professional developers test as they code!** Test each function individually:
+
+```bash
+# Test a specific function
 uv run pytest tests/test_pandas_basics.py::test_load_and_explore_gis_data -v
 
-# Run tests with detailed output
-uv run pytest tests/ -v --tb=short
-```
+# Test all functions
+uv run pytest tests/ -v
 
-You'll see output like:
-```
-======================== test session starts =========================
-tests/test_pandas_basics.py::test_load_and_explore_gis_data PASSED
-tests/test_pandas_basics.py::test_filter_environmental_data FAILED
-tests/test_pandas_basics.py::test_calculate_station_statistics PASSED
-tests/test_pandas_basics.py::test_join_station_data FAILED  
-tests/test_pandas_basics.py::test_save_processed_data PASSED
-
-======================= 3 passed, 2 failed ========================
-```
-
-### Step 4: Debug Failing Tests
-
-When tests fail, pytest gives you detailed information:
-
-```bash
-# Get detailed failure information
+# Get detailed output when tests fail
 uv run pytest tests/ -v -s
-
-# Use pytest's debugging features
-uv run pytest tests/test_pandas_basics.py::test_filter_data --pdb
 ```
 
-### Step 5: Submit Your Work
+### Step 4: Debug and Iterate
 
-When all tests pass locally:
+When tests fail, the error messages tell you exactly what's wrong:
 
 ```bash
-# Verify all tests pass
-uv run pytest tests/
+# Example of what you might see:
+FAILED tests/test_pandas_basics.py::test_filter_environmental_data 
+AssertionError: Expected DataFrame with 45 rows, got 0 rows
+```
 
-# Commit and push your work
+This tells you your filtering isn't working correctly - go back to the notebook to review!
+
+### Step 5: Final Validation
+
+When all functions work:
+
+```bash
+# Verify everything passes
+uv run pytest tests/ -v
+
+# You should see all PASSED
+# Then commit and push your code
 git add .
-git commit -m "Complete pandas assignment - all tests passing"  
+git commit -m "Complete pandas assignment - all functions implemented"
 git push origin main
 ```
 
-**🤖 Automated Grading:** When you push to GitHub, the CI/CD pipeline automatically runs the same pytest tests and calculates your grade. **No manual grading script needed** - the unit tests ARE the grading system!
+**🤖 Automated Grading:** GitHub Actions runs the same tests automatically and calculates your grade!
 
 ---
 

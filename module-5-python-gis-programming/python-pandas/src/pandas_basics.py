@@ -7,8 +7,8 @@ Welcome! This module teaches you essential pandas skills for working with GIS da
 Pandas is Python's most popular library for working with tabular data (like CSV files).
 Think of it as Excel, but with the power of Python programming!
 
-Don't worry if you're new to pandas - we'll guide you through each step with
-detailed comments and examples.
+Don't worry if you're new to pandas - we've provided Jupyter notebooks in the `notebooks/`
+directory to guide you through building each function step by step.
 
 What you'll learn:
 - How to load CSV files into pandas DataFrames
@@ -18,12 +18,21 @@ What you'll learn:
 - How to join datasets together
 - How to save your results
 
-IMPORTANT: Read all the comments carefully. They explain what each line does!
+ASSIGNMENT INSTRUCTIONS:
+========================
+1. Complete each function below by replacing the TODO comments with your code
+2. Use the Jupyter notebooks in `notebooks/` to learn how to build each function
+3. Test your functions as you go: `uv run pytest tests/test_pandas_basics.py::test_function_name -v`
+4. Make sure all tests pass before submitting: `uv run pytest tests/ -v`
+
+IMPORTANT: The notebooks show you HOW to build each function, but you must implement
+the actual code here in this file to pass the unit tests!
 """
 
 import pandas as pd
 import numpy as np
 import os
+from pathlib import Path
 
 
 def load_and_explore_gis_data(file_path):
@@ -36,6 +45,9 @@ def load_and_explore_gis_data(file_path):
 
     Think of this as your first step whenever you get a new dataset - you need to
     understand what you're working with before you can analyze it!
+
+    📚 Learning Resource: See `notebooks/01_function_load_and_explore_gis_data.ipynb`
+    🧪 Test Command: `uv run pytest tests/test_pandas_basics.py::test_load_and_explore_gis_data -v`
 
     Args:
         file_path (str): Path to the CSV file (like 'data/weather_stations.csv')
@@ -50,700 +62,396 @@ def load_and_explore_gis_data(file_path):
         ...
     """
 
-    print("=" * 50)
-    print("LOADING AND EXPLORING GIS DATA")
-    print("=" * 50)
+    # TODO: Print a header to show what function is running
+    # TODO: Use something like print("=" * 50) and print("LOADING AND EXPLORING GIS DATA")
 
-    # STEP 1: Check if the file exists
-    # Before trying to load a file, we should make sure it actually exists
-    # This prevents confusing error messages later
+    # TODO: Check if the file exists using os.path.exists()
+    # TODO: If file doesn't exist, print an error message and return None
+    # TODO: Include helpful suggestions like checking the path and directory
 
-    if not os.path.exists(file_path):
-        print(f"❌ ERROR: File not found: {file_path}")
-        print("Please check:")
-        print("- Is the file path correct?")
-        print("- Are you in the right directory?")
-        print("- Does the file exist?")
-        return None
+    # TODO: Print the file path being loaded
 
-    print(f"📁 Loading data from: {file_path}")
+    # TODO: Use a try/except block to load the CSV file
+    # TODO: Use pd.read_csv(file_path) to load the data into a DataFrame
+    # TODO: If loading succeeds, print a success message
+    # TODO: If loading fails, print the error and return None
 
-    # STEP 2: Load the CSV file into a pandas DataFrame
-    # pd.read_csv() is the most common way to load data into pandas
-    # A DataFrame is like a spreadsheet - it has rows and columns
+    # TODO: Print basic dataset information:
+    # TODO: - Shape (rows and columns) using df.shape
+    # TODO: - Column names using df.columns
+    # TODO: - Data types for each column using df.dtypes or df.info()
 
-    try:
-        df = pd.read_csv(file_path)
-        print("✅ File loaded successfully!")
-    except Exception as e:
-        print(f"❌ ERROR loading file: {e}")
-        print("Common solutions:")
-        print("- Check if the file is a valid CSV")
-        print("- Make sure the file isn't open in Excel")
-        print("- Try opening the file in a text editor to check its format")
-        return None
+    # TODO: Show the first 5 rows using df.head()
+    # TODO: Print a header like "FIRST 5 ROWS:" before showing the data
 
-    # STEP 3: Show basic information about the dataset
-    # This helps you understand what you're working with
+    # TODO: Show summary statistics using df.describe()
+    # TODO: Print a header like "SUMMARY STATISTICS:" before showing stats
 
-    print(f"\n📊 DATASET OVERVIEW:")
-    print(f"Shape: {df.shape} - {df.shape[0]} rows and {df.shape[1]} columns")
+    # TODO: Check for data quality issues:
+    # TODO: - Count missing values using df.isnull().sum()
+    # TODO: - Count duplicate rows using df.duplicated().sum()
+    # TODO: - Report the results with appropriate messages
 
-    # STEP 4: Show the column names
-    # Column names tell you what kind of information each column contains
-    print(f"\n📋 COLUMNS:")
-    for i, column in enumerate(df.columns, 1):
-        print(f"{i:2d}. {column}")
+    # TODO: Print a completion message
 
-    # STEP 5: Show data types
-    # This tells you what kind of data is in each column (numbers, text, dates, etc.)
-    print(f"\n🔍 DATA TYPES:")
-    for column, dtype in df.dtypes.items():
-        print(f"{column:20s}: {dtype}")
+    # TODO: Return the loaded DataFrame
 
-    # STEP 6: Show the first 5 rows
-    # This gives you a preview of what the actual data looks like
-    print(f"\n👀 FIRST 5 ROWS:")
-    print(df.head())
-
-    # STEP 7: Show basic statistics for numeric columns
-    # This gives you an idea of the range and distribution of your numeric data
-    numeric_columns = df.select_dtypes(include=[np.number]).columns
-
-    if len(numeric_columns) > 0:
-        print(f"\n📈 SUMMARY STATISTICS (numeric columns only):")
-        print(df.describe())
-    else:
-        print(f"\n📈 No numeric columns found for summary statistics")
-
-    # STEP 8: Check for missing values
-    # Missing values (NaN, null, empty) are common in real-world data
-    missing_data = df.isnull().sum()
-    total_missing = missing_data.sum()
-
-    if total_missing > 0:
-        print(f"\n⚠️  MISSING VALUES FOUND:")
-        for column, missing_count in missing_data.items():
-            if missing_count > 0:
-                percentage = (missing_count / len(df)) * 100
-                print(f"{column:20s}: {missing_count} missing ({percentage:.1f}%)")
-    else:
-        print(f"\n✅ NO MISSING VALUES - Great!")
-
-    print("=" * 50)
-    print("Data exploration complete!")
-    print("=" * 50)
-
-    return df
+    pass  # Remove this line when you implement the function
 
 
 def filter_environmental_data(df, min_temp=15, max_temp=30, quality="good"):
     """
-    FILTER ENVIRONMENTAL DATA (Like using filters in Excel to show only certain rows)
+    FILTER ENVIRONMENTAL DATA (Like applying filters in Excel to show only certain data)
 
-    This function takes a DataFrame with environmental readings and filters it to show
-    only the data that meets your criteria. For example, you might only want to see
-    readings with good data quality and reasonable temperatures.
+    This function filters temperature readings to show only data that meets your criteria:
+    - Temperature within a specified range (default: 15-30°C)
+    - Only data with a specific quality level (default: "good")
 
-    This is very useful for cleaning data before analysis!
+    This is essential for data cleaning - removing outliers and poor quality measurements!
+
+    📚 Learning Resource: See `notebooks/02_function_filter_environmental_data.ipynb`
+    🧪 Test Command: `uv run pytest tests/test_pandas_basics.py::test_filter_environmental_data -v`
 
     Args:
-        df (pandas.DataFrame): The DataFrame with environmental data
-        min_temp (float): Minimum acceptable temperature (default: 15°C)
-        max_temp (float): Maximum acceptable temperature (default: 30°C)
+        df (pandas.DataFrame): The environmental data to filter (must have 'temperature_c' and 'data_quality' columns)
+        min_temp (float): Minimum temperature threshold in Celsius (default: 15)
+        max_temp (float): Maximum temperature threshold in Celsius (default: 30)
         quality (str): Required data quality level (default: "good")
 
     Returns:
-        pandas.DataFrame: Filtered DataFrame with only rows meeting the criteria
+        pandas.DataFrame: Filtered data meeting all specified conditions
 
     Example:
-        >>> filtered_df = filter_environmental_data(df, min_temp=20, max_temp=25)
-        Filtering environmental data...
+        >>> filtered = filter_environmental_data(df, min_temp=10, max_temp=35, quality="good")
+        Filtering data...
         Original dataset: 500 rows
         After filtering: 247 rows kept, 253 rows removed
         ...
     """
 
-    print("=" * 50)
-    print("FILTERING ENVIRONMENTAL DATA")
-    print("=" * 50)
+    # TODO: Print a header to show what function is running
+    # TODO: Use print("=" * 50) and print("FILTERING ENVIRONMENTAL DATA")
 
-    # STEP 1: Check if the DataFrame is empty
-    if df is None or df.empty:
-        print("❌ ERROR: DataFrame is empty or None")
-        return pd.DataFrame()
+    # TODO: Input validation - check if df is None or empty
+    # TODO: If invalid input, print error and return empty DataFrame: pd.DataFrame()
 
-    # Show the filtering criteria
-    print(f"🔍 FILTERING CRITERIA:")
-    print(f"   Temperature: between {min_temp}°C and {max_temp}°C")
-    print(f"   Data quality: '{quality}'")
+    # TODO: Check for required columns: 'temperature_c' and 'data_quality'
+    # TODO: If missing columns, print error with available columns and return empty DataFrame
 
-    # STEP 2: Check that required columns exist
-    # We need these columns to do our filtering
-    required_columns = ['temperature_c', 'data_quality']
-    missing_columns = [col for col in required_columns if col not in df.columns]
+    # TODO: Store the original number of rows for reporting
+    # TODO: Use len(df) to get row count
 
-    if missing_columns:
-        print(f"❌ ERROR: Missing required columns: {missing_columns}")
-        print(f"Available columns: {list(df.columns)}")
-        return pd.DataFrame()
+    # TODO: Print the filtering criteria being applied
+    # TODO: Show min_temp, max_temp, and quality parameters
 
-    print(f"✅ All required columns found")
+    # TODO: Check if the specified quality level exists in the data
+    # TODO: Use df['data_quality'].unique() to see available quality levels
+    # TODO: If quality not found, print warning and available options
 
-    # STEP 3: Show original dataset size
-    original_size = len(df)
-    print(f"\n📊 Original dataset: {original_size} rows")
+    # TODO: Create temperature filter using boolean indexing
+    # TODO: Use: (df['temperature_c'] >= min_temp) & (df['temperature_c'] <= max_temp)
+    # TODO: Remember to use parentheses around each condition when combining with &
 
-    # STEP 4: Create filter conditions
-    # In pandas, we create "boolean masks" - these are True/False for each row
+    # TODO: Create quality filter using boolean indexing
+    # TODO: Use: df['data_quality'] == quality
 
-    # CONDITION 1: Temperature must be within the specified range
-    # This creates a True/False value for each row
-    temp_condition = (df['temperature_c'] >= min_temp) & (df['temperature_c'] <= max_temp)
+    # TODO: Combine filters using & (AND operation)
+    # TODO: Apply combined filter to get filtered DataFrame
+    # TODO: Use: filtered_df = df[combined_filter].copy()
 
-    # Let's see how many rows meet the temperature condition
-    temp_passed = temp_condition.sum()  # sum() counts True values
-    print(f"   Temperature filter: {temp_passed} rows pass")
+    # TODO: Calculate and report filtering results
+    # TODO: - Original count (stored earlier)
+    # TODO: - Filtered count using len(filtered_df)
+    # TODO: - Removed count (original - filtered)
+    # TODO: - Percentage removed
 
-    # CONDITION 2: Data quality must match what we want
-    quality_condition = df['data_quality'] == quality
-    quality_passed = quality_condition.sum()
-    print(f"   Quality filter: {quality_passed} rows pass")
+    # TODO: Show summary statistics of filtered data
+    # TODO: - Temperature range in filtered data
+    # TODO: - Quality distribution in filtered data
 
-    # CONDITION 3: No missing values in important columns
-    # We don't want rows where temperature or quality data is missing
-    not_missing = df['temperature_c'].notna() & df['data_quality'].notna()
-    not_missing_passed = not_missing.sum()
-    print(f"   No missing data: {not_missing_passed} rows pass")
+    # TODO: Print completion message
 
-    # STEP 5: Combine all conditions
-    # ALL conditions must be True for a row to be kept
-    # The & symbol means "AND" in pandas
-    all_conditions = temp_condition & quality_condition & not_missing
+    # TODO: Return the filtered DataFrame
 
-    # STEP 6: Apply the filter to create the filtered DataFrame
-    # df[condition] keeps only rows where condition is True
-    filtered_df = df[all_conditions].copy()  # .copy() prevents modifying the original
-
-    # STEP 7: Show results
-    filtered_size = len(filtered_df)
-    removed_size = original_size - filtered_size
-
-    print(f"\n📊 FILTERING RESULTS:")
-    print(f"   Rows kept: {filtered_size}")
-    print(f"   Rows removed: {removed_size}")
-
-    if original_size > 0:
-        percentage_kept = (filtered_size / original_size) * 100
-        print(f"   Percentage kept: {percentage_kept:.1f}%")
-
-    # STEP 8: Show some examples of what was kept
-    if not filtered_df.empty:
-        print(f"\n👀 SAMPLE OF FILTERED DATA:")
-        print(filtered_df[['temperature_c', 'data_quality']].head())
-    else:
-        print(f"\n⚠️  WARNING: No rows remain after filtering!")
-        print(f"Try relaxing your criteria:")
-        print(f"   - Use wider temperature range")
-        print(f"   - Check available quality values: {df['data_quality'].unique()}")
-
-    print("=" * 50)
-    print("Filtering complete!")
-    print("=" * 50)
-
-    return filtered_df
+    pass  # Remove this line when you implement the function
 
 
 def calculate_station_statistics(df):
     """
-    CALCULATE STATISTICS BY STATION (Like making a summary table in Excel)
+    CALCULATE STATION STATISTICS (Like creating a summary report for each weather station)
 
-    This function groups environmental readings by weather station and calculates
-    useful statistics like average temperature, humidity, and number of readings.
+    This function groups temperature readings by station and calculates summary statistics
+    for each station. This is essential for understanding patterns across different
+    monitoring locations!
 
-    This is very common in GIS work - you often want to summarize data by location,
-    region, or other geographic groupings.
+    📚 Learning Resource: See `notebooks/03_function_calculate_station_statistics.ipynb`
+    🧪 Test Command: `uv run pytest tests/test_pandas_basics.py::test_calculate_station_statistics -v`
 
     Args:
-        df (pandas.DataFrame): DataFrame with columns 'station_id', 'temperature_c',
-                              and 'humidity_percent'
+        df (pandas.DataFrame): Environmental data with 'station_id', 'temperature_c', and 'humidity_percent' columns
 
     Returns:
-        pandas.DataFrame: Summary statistics for each station
+        pandas.DataFrame: Statistics summary with columns:
+            - station_id: Station identifier
+            - avg_temperature: Mean temperature in Celsius (rounded to 1 decimal)
+            - avg_humidity: Mean humidity percentage (rounded to 1 decimal)
+            - reading_count: Number of readings for this station
 
     Example:
-        >>> stats_df = calculate_station_statistics(readings_df)
-        Calculating station statistics...
-        Found 5 unique stations
-        Station with highest avg temperature: STN_003 (24.5°C)
+        >>> stats = calculate_station_statistics(df)
+        Station Statistics Summary:
+        station_id  avg_temperature  avg_humidity  reading_count
+        STN_001            22.5           65.2            45
+        STN_002            21.8           67.1            52
         ...
     """
 
-    print("=" * 50)
-    print("CALCULATING STATION STATISTICS")
-    print("=" * 50)
+    # TODO: Print a header to show what function is running
+    # TODO: Use print("=" * 50) and print("CALCULATING STATION STATISTICS")
 
-    # STEP 1: Check if DataFrame is valid
-    if df is None or df.empty:
-        print("❌ ERROR: DataFrame is empty or None")
-        return pd.DataFrame()
+    # TODO: Input validation - check if df is None or empty
+    # TODO: If invalid, print error and return empty DataFrame: pd.DataFrame()
 
-    # STEP 2: Check for required columns
-    required_columns = ['station_id', 'temperature_c', 'humidity_percent']
-    missing_columns = [col for col in required_columns if col not in df.columns]
+    # TODO: Check for required columns: 'station_id', 'temperature_c', 'humidity_percent'
+    # TODO: If missing columns, print error with available columns and return empty DataFrame
 
-    if missing_columns:
-        print(f"❌ ERROR: Missing required columns: {missing_columns}")
-        print(f"Available columns: {list(df.columns)}")
-        return pd.DataFrame()
+    # TODO: Print input data summary (number of readings being processed)
 
-    print(f"✅ All required columns found")
+    # TODO: Get unique stations and print how many stations found
+    # TODO: Use df['station_id'].unique()
 
-    # STEP 3: Show basic information about the data
-    total_rows = len(df)
-    unique_stations = df['station_id'].nunique()
-    print(f"\n📊 DATA OVERVIEW:")
-    print(f"   Total readings: {total_rows}")
-    print(f"   Unique stations: {unique_stations}")
+    # TODO: Group data by station_id using df.groupby('station_id')
 
-    # Show the station IDs
-    station_list = sorted(df['station_id'].unique())
-    print(f"   Station IDs: {station_list}")
+    # TODO: Calculate average temperature for each station
+    # TODO: Use grouped_data['temperature_c'].mean()
+    # TODO: Round to 1 decimal place using .round(1)
 
-    # STEP 4: Group the data by station_id
-    # .groupby() is like creating separate tables for each station
-    print(f"\n🔄 Grouping data by station...")
+    # TODO: Calculate average humidity for each station
+    # TODO: Use grouped_data['humidity_percent'].mean()
+    # TODO: Round to 1 decimal place using .round(1)
 
-    try:
-        grouped = df.groupby('station_id')
-    except Exception as e:
-        print(f"❌ ERROR during grouping: {e}")
-        return pd.DataFrame()
+    # TODO: Count readings per station
+    # TODO: Use grouped_data.size() to count all rows per group
 
-    # STEP 5: Calculate statistics for each group
-    # We'll create a new DataFrame with one row per station
+    # TODO: Create summary DataFrame with the statistics
+    # TODO: Create a DataFrame with columns: station_id, avg_temperature, avg_humidity, reading_count
+    # TODO: Make sure to reset the index so station_id becomes a regular column
 
-    print(f"📈 Calculating statistics...")
+    # TODO: Print summary of results:
+    # TODO: - Temperature range across all stations
+    # TODO: - Humidity range across all stations
+    # TODO: - Total readings processed
+    # TODO: - Average readings per station
 
-    # Calculate various statistics
-    stats_dict = {
-        'station_id': [],
-        'reading_count': [],
-        'avg_temperature': [],
-        'min_temperature': [],
-        'max_temperature': [],
-        'avg_humidity': [],
-        'min_humidity': [],
-        'max_humidity': []
-    }
+    # TODO: Find and report temperature extremes:
+    # TODO: - Hottest station (highest average temperature)
+    # TODO: - Coolest station (lowest average temperature)
+    # TODO: Use .idxmax() and .idxmin() or sort the DataFrame
 
-    # Loop through each station group and calculate stats
-    for station_id, station_data in grouped:
-        # Only include stations with valid temperature and humidity data
-        valid_temp = station_data['temperature_c'].notna()
-        valid_humidity = station_data['humidity_percent'].notna()
-        valid_both = valid_temp & valid_humidity
-        clean_data = station_data[valid_both]
+    # TODO: Print the complete statistics table
+    # TODO: Use print(stats_df.to_string(index=False)) for nice formatting
 
-        if len(clean_data) > 0:
-            stats_dict['station_id'].append(station_id)
-            stats_dict['reading_count'].append(len(clean_data))
-            stats_dict['avg_temperature'].append(clean_data['temperature_c'].mean())
-            stats_dict['min_temperature'].append(clean_data['temperature_c'].min())
-            stats_dict['max_temperature'].append(clean_data['temperature_c'].max())
-            stats_dict['avg_humidity'].append(clean_data['humidity_percent'].mean())
-            stats_dict['min_humidity'].append(clean_data['humidity_percent'].min())
-            stats_dict['max_humidity'].append(clean_data['humidity_percent'].max())
+    # TODO: Print completion message
 
-        print(f"   {station_id}: {len(clean_data)} valid readings")
+    # TODO: Return the statistics DataFrame
 
-    # STEP 6: Create the summary DataFrame
-    if len(stats_dict['station_id']) == 0:
-        print("❌ ERROR: No valid data found for any station")
-        return pd.DataFrame()
-
-    stats_df = pd.DataFrame(stats_dict)
-
-    # Round numeric values to make them more readable
-    numeric_columns = ['avg_temperature', 'min_temperature', 'max_temperature',
-                      'avg_humidity', 'min_humidity', 'max_humidity']
-    for col in numeric_columns:
-        stats_df[col] = stats_df[col].round(1)
-
-    # STEP 7: Show the results
-    print(f"\n📊 STATION STATISTICS SUMMARY:")
-    print(stats_df.to_string(index=False))
-
-    # STEP 8: Highlight interesting findings
-    if len(stats_df) > 0:
-        hottest_station = stats_df.loc[stats_df['avg_temperature'].idxmax()]
-        coolest_station = stats_df.loc[stats_df['avg_temperature'].idxmin()]
-        most_readings = stats_df.loc[stats_df['reading_count'].idxmax()]
-
-        print(f"\n🌡️  INTERESTING FINDINGS:")
-        print(f"   Hottest station: {hottest_station['station_id']} "
-              f"(avg: {hottest_station['avg_temperature']}°C)")
-        print(f"   Coolest station: {coolest_station['station_id']} "
-              f"(avg: {coolest_station['avg_temperature']}°C)")
-        print(f"   Most readings: {most_readings['station_id']} "
-              f"({most_readings['reading_count']} readings)")
-
-    print("=" * 50)
-    print("Station statistics calculation complete!")
-    print("=" * 50)
-
-    return stats_df
+    pass  # Remove this line when you implement the function
 
 
 def join_station_data(stations_df, readings_df):
     """
-    JOIN STATION DATA (Like using VLOOKUP in Excel to combine tables)
+    JOIN STATION DATA WITH READINGS (Like connecting two Excel sheets with a common column)
 
-    This function combines two DataFrames:
-    1. stations_df: Information about weather stations (locations, names, etc.)
-    2. readings_df: Temperature and humidity measurements from those stations
+    This function combines weather station location information with temperature readings.
+    After joining, each temperature reading will have the station's name, coordinates,
+    and elevation - enabling geographic analysis!
 
-    The result is a single DataFrame that shows both the measurements AND
-    information about where each measurement was taken.
-
-    This is very common in GIS - you often have separate tables that you need
-    to combine based on a common field (like station ID).
+    📚 Learning Resource: See `notebooks/04_function_join_station_data.ipynb`
+    🧪 Test Command: `uv run pytest tests/test_pandas_basics.py::test_join_station_data -v`
 
     Args:
-        stations_df (pandas.DataFrame): DataFrame with station information
-        readings_df (pandas.DataFrame): DataFrame with measurement data
+        stations_df (pandas.DataFrame): Weather station information with columns:
+            - station_id: Unique station identifier
+            - station_name: Human-readable station name
+            - latitude, longitude: Station coordinates
+            - elevation_m: Station elevation in meters
+
+        readings_df (pandas.DataFrame): Environmental measurements with columns:
+            - station_id: Links to stations_df station_id
+            - date: Measurement date
+            - temperature_c: Temperature measurement in Celsius
+            - humidity_percent: Humidity measurement percentage
+            - data_quality: Quality assessment flag
 
     Returns:
-        pandas.DataFrame: Combined DataFrame with both station info and readings
+        pandas.DataFrame: Combined dataset with both station information and environmental readings
 
     Example:
-        >>> combined_df = join_station_data(stations_df, readings_df)
-        Joining station data...
-        Stations: 5 stations
-        Readings: 500 measurements
-        Result: 500 rows with location information added
+        >>> combined = join_station_data(stations_df, readings_df)
+        Joining station locations with temperature readings...
+        Stations dataset: 15 stations
+        Readings dataset: 500 readings
+        After joining: 500 rows (all readings matched to stations)
         ...
     """
 
-    print("=" * 50)
-    print("JOINING STATION DATA")
-    print("=" * 50)
+    # TODO: Print a header to show what function is running
+    # TODO: Use print("=" * 50) and print("JOINING STATION DATA WITH READINGS")
 
-    # STEP 1: Check if both DataFrames are valid
-    if stations_df is None or stations_df.empty:
-        print("❌ ERROR: Stations DataFrame is empty or None")
-        return pd.DataFrame()
+    # TODO: Input validation - check if both DataFrames are valid
+    # TODO: Check for None or empty DataFrames, return empty DataFrame if invalid
 
-    if readings_df is None or readings_df.empty:
-        print("❌ ERROR: Readings DataFrame is empty or None")
-        return pd.DataFrame()
+    # TODO: Check for required columns in both DataFrames
+    # TODO: Both need 'station_id' column for joining
+    # TODO: If missing, print error and return empty DataFrame
 
-    print(f"✅ Both DataFrames are valid")
+    # TODO: Print input data summary
+    # TODO: Show number of stations and number of readings
 
-    # STEP 2: Check for the common column we'll join on
-    join_column = 'station_id'
+    # TODO: Analyze the relationship between datasets
+    # TODO: Get unique station_ids from both DataFrames using .unique()
+    # TODO: Find stations that are in both datasets (intersection)
+    # TODO: Find stations only in stations_df (difference)
+    # TODO: Find stations only in readings_df (difference)
+    # TODO: Report these relationships to help understand the data
 
-    if join_column not in stations_df.columns:
-        print(f"❌ ERROR: '{join_column}' not found in stations DataFrame")
-        print(f"Available columns: {list(stations_df.columns)}")
-        return pd.DataFrame()
+    # TODO: Perform the join using pd.merge()
+    # TODO: Use LEFT JOIN to preserve all readings: how='left'
+    # TODO: Join on 'station_id' column: on='station_id'
+    # TODO: Syntax: pd.merge(readings_df, stations_df, on='station_id', how='left')
 
-    if join_column not in readings_df.columns:
-        print(f"❌ ERROR: '{join_column}' not found in readings DataFrame")
-        print(f"Available columns: {list(readings_df.columns)}")
-        return pd.DataFrame()
+    # TODO: Validate the join results
+    # TODO: Check that no readings were lost (row count should match readings_df)
+    # TODO: Check which new columns were added from stations_df
+    # TODO: Check how many readings have complete location information
 
-    print(f"✅ Join column '{join_column}' found in both DataFrames")
+    # TODO: Report join results
+    # TODO: - Original readings count
+    # TODO: - Final joined data count
+    # TODO: - Confirmation that all readings preserved
+    # TODO: - New columns added
+    # TODO: - Coverage of location data
 
-    # STEP 3: Show information about what we're joining
-    stations_count = len(stations_df)
-    readings_count = len(readings_df)
-    unique_stations_in_readings = readings_df[join_column].nunique()
-    unique_stations_available = stations_df[join_column].nunique()
+    # TODO: If some readings lack location data, report which stations are missing
 
-    print(f"\n📊 DATA TO JOIN:")
-    print(f"   Stations DataFrame: {stations_count} stations")
-    print(f"   Readings DataFrame: {readings_count} measurements")
-    print(f"   Unique stations in readings: {unique_stations_in_readings}")
-    print(f"   Unique stations available: {unique_stations_available}")
+    # TODO: Print completion message
 
-    # STEP 4: Check which stations in readings have matching station info
-    readings_stations = set(readings_df[join_column].unique())
-    available_stations = set(stations_df[join_column].unique())
+    # TODO: Return the joined DataFrame
 
-    matching_stations = readings_stations.intersection(available_stations)
-    missing_stations = readings_stations - available_stations
-
-    print(f"\n🔍 MATCHING ANALYSIS:")
-    print(f"   Stations with matches: {len(matching_stations)}")
-    if missing_stations:
-        print(f"   Stations missing info: {len(missing_stations)} {sorted(missing_stations)}")
-    else:
-        print(f"   All reading stations have station info - Perfect!")
-
-    # STEP 5: Perform the join
-    # pd.merge() combines DataFrames based on common columns
-    # 'left' join keeps all readings, even if some don't have station info
-    print(f"\n🔄 Performing join...")
-
-    try:
-        # Use 'left' join to keep all readings
-        # This means we keep every row from readings_df, and add station info where available
-        joined_df = pd.merge(
-            readings_df,        # Left table (we keep all rows from this)
-            stations_df,        # Right table (we add info from this)
-            on=join_column,     # Column to join on
-            how='left'          # Type of join
-        )
-        print(f"✅ Join completed successfully!")
-
-    except Exception as e:
-        print(f"❌ ERROR during join: {e}")
-        return pd.DataFrame()
-
-    # STEP 6: Analyze the join results
-    result_count = len(joined_df)
-
-    print(f"\n📊 JOIN RESULTS:")
-    print(f"   Original readings: {readings_count}")
-    print(f"   Joined result: {result_count} rows")
-
-    # Check if any readings didn't get station info
-    # These would have NaN values in columns from the stations DataFrame
-    station_columns = [col for col in stations_df.columns if col != join_column]
-    if station_columns:
-        # Check for missing values in the first station info column
-        first_station_col = station_columns[0]
-        missing_info = joined_df[first_station_col].isna().sum()
-
-        if missing_info > 0:
-            print(f"   ⚠️  {missing_info} readings have no station info")
-        else:
-            print(f"   ✅ All readings have complete station info!")
-
-    # STEP 7: Show what new columns were added
-    original_columns = set(readings_df.columns)
-    new_columns = [col for col in joined_df.columns if col not in original_columns]
-
-    if new_columns:
-        print(f"\n📋 NEW COLUMNS ADDED:")
-        for col in new_columns:
-            print(f"   - {col}")
-
-    # STEP 8: Show a preview of the joined data
-    print(f"\n👀 PREVIEW OF JOINED DATA:")
-    # Show first few rows with both original and new columns
-    preview_columns = list(readings_df.columns)[:3] + new_columns[:3]
-    available_preview_columns = [col for col in preview_columns if col in joined_df.columns]
-
-    if available_preview_columns:
-        print(joined_df[available_preview_columns].head())
-    else:
-        print(joined_df.head())
-
-    print("=" * 50)
-    print("Join complete!")
-    print("=" * 50)
-
-    return joined_df
+    pass  # Remove this line when you implement the function
 
 
 def save_processed_data(df, output_file):
     """
-    SAVE PROCESSED DATA (Like saving your Excel spreadsheet)
+    SAVE PROCESSED DATA (Like saving your Excel work so you can use it later)
 
-    This function saves your processed DataFrame to a CSV file that can be:
-    - Opened in Excel or other spreadsheet programs
-    - Imported into QGIS for mapping
-    - Shared with colleagues
-    - Used for further analysis
+    This function saves your processed DataFrame to a CSV file that you can open in
+    QGIS, Excel, or other programs. It includes validation to make sure the file
+    was saved correctly!
+
+    📚 Learning Resource: See `notebooks/05_function_save_processed_data.ipynb`
+    🧪 Test Command: `uv run pytest tests/test_pandas_basics.py::test_save_processed_data -v`
 
     Args:
-        df (pandas.DataFrame): The DataFrame to save
-        output_file (str): Path and filename for the output CSV (like 'output/results.csv')
+        df (pandas.DataFrame): The processed data to save
+        output_file (str): Path where to save the CSV file (e.g., 'output/processed_data.csv')
 
     Returns:
-        bool: True if successful, False if there was an error
+        bool: True if saving was successful, False otherwise
 
     Example:
-        >>> success = save_processed_data(processed_df, 'output/environmental_analysis.csv')
+        >>> success = save_processed_data(processed_df, 'output/final_results.csv')
         Saving processed data...
-        File saved successfully: output/environmental_analysis.csv
-        File size: 125.3 KB
-        ...
+        File saved: output/final_results.csv
+        File size: 15.2 KB
+        Data rows saved: 247
+        Ready for use in QGIS!
     """
 
-    print("=" * 50)
-    print("SAVING PROCESSED DATA")
-    print("=" * 50)
+    # TODO: Print a header to show what function is running
+    # TODO: Use print("=" * 50) and print("SAVING PROCESSED DATA")
 
-    # STEP 1: Check if DataFrame is valid
-    if df is None or df.empty:
-        print("❌ ERROR: DataFrame is empty or None - nothing to save")
-        return False
+    # TODO: Input validation
+    # TODO: Check if df is None, return False if invalid
+    # TODO: Check if df is empty (warn but continue - empty files can be valid)
+    # TODO: Check if output_file is valid string, return False if invalid
 
-    print(f"📊 Data to save: {len(df)} rows, {len(df.columns)} columns")
+    # TODO: Convert output_file to Path object for easier manipulation
+    # TODO: Use: output_path = Path(output_file)
 
-    # STEP 2: Check the output file path
-    print(f"💾 Output file: {output_file}")
+    # TODO: Print information about the data being saved
+    # TODO: - DataFrame shape
+    # TODO: - Number of columns
+    # TODO: - Memory usage (optional)
 
-    # Create the directory if it doesn't exist
-    output_dir = os.path.dirname(output_file)
-    if output_dir and not os.path.exists(output_dir):
-        print(f"📁 Creating directory: {output_dir}")
-        try:
-            os.makedirs(output_dir)
-        except Exception as e:
-            print(f"❌ ERROR creating directory: {e}")
-            return False
+    # TODO: Print information about output location
+    # TODO: - Full file path
+    # TODO: - Directory where file will be saved
+    # TODO: - Filename
 
-    # STEP 3: Save the DataFrame to CSV
-    print(f"💾 Saving data...")
+    # TODO: Create output directory if it doesn't exist
+    # TODO: Use output_path.parent.mkdir(parents=True, exist_ok=True)
+    # TODO: Wrap in try/except to handle permission errors
+    # TODO: Return False if directory creation fails
 
-    try:
-        # Save with good default settings:
-        # - index=False: Don't save row numbers as a column
-        # - float_format='%.2f': Round decimals to 2 places for readability
-        df.to_csv(
-            output_file,
-            index=False,           # Don't include row numbers
-            float_format='%.2f'    # Format decimal numbers nicely
-        )
-        print(f"✅ File saved successfully!")
+    # TODO: Save the data using df.to_csv()
+    # TODO: Use these parameters for good formatting:
+    # TODO: - index=False (don't save row numbers)
+    # TODO: - float_format='%.3f' (round floats to 3 decimals)
+    # TODO: - na_rep='' (empty string for missing values)
+    # TODO: Wrap in try/except to handle save errors (permissions, disk space, etc.)
+    # TODO: Return False if saving fails
 
-    except Exception as e:
-        print(f"❌ ERROR saving file: {e}")
-        print("Common solutions:")
-        print("- Make sure the file isn't open in Excel")
-        print("- Check that you have write permission to the directory")
-        print("- Try a different filename or location")
-        return False
+    # TODO: Validate the saved file
+    # TODO: Check that file exists using output_path.exists()
+    # TODO: Get file size using output_path.stat().st_size
+    # TODO: Try reading the file back to verify it's valid
+    # TODO: Compare original and reloaded shapes to ensure data integrity
 
-    # STEP 4: Verify the file was created and show file info
-    if os.path.exists(output_file):
-        file_size = os.path.getsize(output_file)
+    # TODO: Print success summary
+    # TODO: - File location (full path)
+    # TODO: - File size in bytes and KB
+    # TODO: - Number of data rows saved
+    # TODO: - Number of columns saved
+    # TODO: - Confirmation message about being ready for QGIS/Excel
 
-        # Convert file size to human-readable format
-        if file_size < 1024:
-            size_str = f"{file_size} bytes"
-        elif file_size < 1024 * 1024:
-            size_str = f"{file_size / 1024:.1f} KB"
-        else:
-            size_str = f"{file_size / (1024 * 1024):.1f} MB"
+    # TODO: Return True for success
 
-        print(f"\n📁 FILE INFORMATION:")
-        print(f"   Location: {os.path.abspath(output_file)}")
-        print(f"   Size: {size_str}")
-        print(f"   Rows saved: {len(df)}")
-        print(f"   Columns saved: {len(df.columns)}")
-
-        # STEP 5: Show column names that were saved
-        print(f"\n📋 COLUMNS SAVED:")
-        for i, column in enumerate(df.columns, 1):
-            print(f"   {i:2d}. {column}")
-
-        # STEP 6: Give helpful next steps
-        print(f"\n🎯 WHAT YOU CAN DO WITH THIS FILE:")
-        print(f"   📊 Open in Excel or Google Sheets for viewing")
-        print(f"   🗺️  Import into QGIS for mapping (if it has coordinates)")
-        print(f"   📤 Share with colleagues")
-        print(f"   📈 Use for further analysis")
-        print(f"   🔄 Read back into Python: pd.read_csv('{output_file}')")
-
-        print("=" * 50)
-        print("Data successfully saved!")
-        print("=" * 50)
-
-        return True
-
-    else:
-        print(f"❌ ERROR: File was not created")
-        return False
+    pass  # Remove this line when you implement the function
 
 
-# ==============================================================================
-# HELPER FUNCTIONS - These support the main functions above
-# ==============================================================================
-
-def _check_required_columns(df, required_columns, function_name="function"):
+# Helper functions (you don't need to modify these)
+def _check_required_columns(df, required_columns, data_name="DataFrame"):
     """
-    Helper function to check if a DataFrame has all required columns.
-    This reduces repetitive code in the main functions.
+    Helper function to check if DataFrame has required columns.
+
+    Args:
+        df: DataFrame to check
+        required_columns: List of required column names
+        data_name: Name for error messages
+
+    Returns:
+        List of missing column names (empty if all present)
     """
     if df is None or df.empty:
-        return False, ["DataFrame is empty or None"]
+        return required_columns
 
     missing_columns = [col for col in required_columns if col not in df.columns]
-
-    if missing_columns:
-        return False, missing_columns
-
-    return True, []
+    return missing_columns
 
 
-def _format_number(number, decimal_places=1):
+def _format_number(value, decimals=1):
     """
-    Helper function to format numbers for display.
-    Makes output more readable.
+    Helper function to safely format numbers with specified decimal places.
+
+    Args:
+        value: Number to format
+        decimals: Number of decimal places
+
+    Returns:
+        Formatted number or original value if not numeric
     """
     try:
-        return f"{float(number):.{decimal_places}f}"
+        return round(float(value), decimals)
     except (ValueError, TypeError):
-        return str(number)
-
-
-# ==============================================================================
-# EXAMPLE USAGE - Uncomment these lines to test your functions
-# ==============================================================================
-
-"""
-# Example of how to use all the functions together:
-
-if __name__ == "__main__":
-
-    # Step 1: Load station locations
-    stations = load_and_explore_gis_data('data/weather_stations.csv')
-
-    # Step 2: Load temperature readings
-    readings = load_and_explore_gis_data('data/temperature_readings.csv')
-
-    # Step 3: Filter for good quality data
-    filtered_readings = filter_environmental_data(readings, min_temp=15, max_temp=30, quality="good")
-
-    # Step 4: Calculate statistics by station
-    station_stats = calculate_station_statistics(filtered_readings)
-
-    # Step 5: Join station info with readings
-    combined_data = join_station_data(stations, filtered_readings)
-
-    # Step 6: Save the results
-    save_processed_data(combined_data, 'output/processed_environmental_data.csv')
-    save_processed_data(station_stats, 'output/station_statistics.csv')
-"""
-
-"""
-CONGRATULATIONS! 🎉
-
-You've learned the essential pandas skills for GIS data analysis:
-
-✅ Loading CSV files and exploring data structure
-✅ Filtering data based on multiple conditions
-✅ Calculating summary statistics by groups
-✅ Joining related datasets together
-✅ Saving results for further use
-
-These skills form the foundation for:
-🌍 Environmental data analysis
-🏙️  Urban planning and demographics
-🌊 Hydrological and climate studies
-🌱 Agricultural and ecological research
-🗺️  Preparing data for GIS mapping
-
-Next steps:
-- Practice with your own datasets
-- Learn GeoPandas for spatial data
-- Explore data visualization with matplotlib
-- Try more advanced pandas operations
-
-Keep up the great work! 🚀
-"""
+        return value
