@@ -1,0 +1,25 @@
+# Python Pandas Assignment Dependencies
+# GIST 604B - Open Source GIS Programming
+# =======================================
+
+# Core data analysis library
+pandas>=2.0.0,<3.0.0
+
+# Numerical computing (dependency of pandas, but explicit is better)
+numpy>=1.24.0,<2.0.0
+
+# Unit testing framework
+pytest>=7.0.0,<8.0.0
+
+# Test coverage reporting
+pytest-cov>=4.0.0,<5.0.0
+
+# HTML test reports
+pytest-html>=3.1.0,<4.0.0
+
+# Development and debugging tools (optional)
+ipython>=8.0.0,<9.0.0
+jupyter>=1.0.0,<2.0.0
+
+# For better test output formatting
+pytest-sugar>=0.9.0,<1.0.0

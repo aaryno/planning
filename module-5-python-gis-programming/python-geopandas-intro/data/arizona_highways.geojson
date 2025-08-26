@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "arizona_highways",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "Interstate 17", "type": "Interstate" }, "geometry": { "type": "LineString", "coordinates": [ [ -112.074, 33.4484 ], [ -111.6513, 35.1983 ] ] } }
+]
+}

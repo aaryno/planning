@@ -28,32 +28,26 @@ dependencies = [
     # Core geospatial analysis
     "geopandas>=0.14.1,<0.15.0",
     "pandas>=2.1.4,<3.0",
-    "numpy>=1.26.2,<2.0",
-
+    "numpy>=2.0.0",
     # Geospatial data handling
     "fiona>=1.9.0,<2.0",
     "pyproj>=3.6.0,<4.0",
     "shapely>=2.0.0,<3.0",
     "rtree>=1.2.0,<2.0",
-
     # Data sources and sample datasets
     "geodatasets>=2023.12.0",
     "requests>=2.31.0,<3.0",
-
     # Visualization
     "matplotlib>=3.8.2,<4.0",
     "contextily>=1.4.0,<2.0",
     "folium>=0.15.0,<1.0",
     "mapclassify>=2.6.0,<3.0",
-
     # Interactive development
     "jupyter>=1.0.0,<2.0",
     "ipykernel>=6.25.0,<7.0",
     "notebook>=7.0.0,<8.0",
-
     # Performance and optimization
     "numba>=0.58.0,<1.0",
-
     # File format support
     "openpyxl>=3.1.0,<4.0",
     "xlsxwriter>=3.1.0,<4.0",

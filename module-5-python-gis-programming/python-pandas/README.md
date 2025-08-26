@@ -1,24 +1,25 @@
-# Python Pandas Data Analysis - Automated Assessment
+# Python Pandas for GIS Data Analysis
 
 **GIST 604B - Open Source GIS Programming**  
 **Module 5: Python GIS Programming**  
-**Points: 30 | Due: Two weeks from assignment date**
+**Points: 20 | Due: One week from assignment date**
 
 ---
 
 ## 🎯 Assignment Overview
 
-This assignment introduces you to **pandas fundamentals** while teaching you professional software development practices through **automated assessment**. Your code will be continuously tested using **GitHub Actions CI/CD pipelines** - the same technology used by major tech companies for quality assurance.
+Learn the **essential pandas skills** you need for GIS data analysis! This assignment teaches you how to work with tabular data (like CSV files) using Python's most popular data analysis library.
 
-### 🔑 Key Learning Innovation
-- **Real-world Skills**: Experience with automated testing, code quality checks, and CI/CD workflows
-- **Immediate Feedback**: Get instant results on code quality, correctness, and performance  
-- **Professional Standards**: Learn industry best practices for data analysis code
+**What you'll learn:**
+- Load CSV files with GIS data into Python
+- Explore and understand your datasets  
+- Filter data based on conditions (like "show me only high-quality readings")
+- Calculate basic statistics and summaries
+- Join datasets together (like combining station locations with measurements)
+- Export your results for use in QGIS or other GIS software
+- **Unit testing with pytest** - professional testing practices used in industry
 
-### 📋 Prerequisites
-- Basic Python programming knowledge
-- Familiarity with git/GitHub
-- Completion of "Codespaces Introduction" assignment
+**Time commitment:** About 3-4 hours total (includes learning unit testing)
 
 ---
 
@@ -29,400 +30,412 @@ This assignment introduces you to **pandas fundamentals** while teaching you pro
 2. Accept the assignment to create your personal repository
 3. Your repo will be named: `gist-604b-python-pandas-[your-username]`
 
-### Step 2: Open Your Development Environment
+### Step 2: Choose Your Development Environment
 
-**Option A: GitHub Codespaces (Recommended)**
+**🪟 Windows Users: Use GitHub Codespaces (STRONGLY Recommended)**
+- ✅ **No setup required** - everything works immediately
+- ✅ **No Windows compatibility issues** - Unix environment provided
+- ✅ **No conda/pip problems** - pre-configured pandas environment
+- ✅ **Focus on learning** - not troubleshooting installation issues
+- ✅ **Same environment as instructor** - guaranteed compatibility
+
 ```bash
-# Click "Code" → "Create codespace on main"
-# Everything will be pre-configured!
+# For Windows users (and everyone else):
+# 1. Go to your assignment repository on GitHub
+# 2. Click "Code" → "Create codespace on main"  
+# 3. Wait 2-3 minutes for automatic setup
+# 4. Start coding immediately!
 ```
 
-**Option B: Local Development**
+**🐧🍎 Mac/Linux Users: Choose Your Preference**
+
+**Option A: GitHub Codespaces (Recommended for All)**
+```bash
+# Click "Code" → "Create codespace on main"
+# Pandas environment will be pre-configured and ready!
+```
+
+**Option B: Local Development (Mac/Linux Only - Windows at your own risk)**
 ```bash
 # Clone your repository
 git clone https://github.com/your-org/your-assignment-repo.git
 cd your-assignment-repo
 
-# Install uv package manager (if not installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Create conda environment
+conda create -n gis-pandas python=3.11 pandas jupyter
+conda activate gis-pandas
 
-# Setup project
-uv sync --all-extras --dev
+# OR use pip if you prefer
+pip install pandas jupyter
 ```
 
-### Step 3: Verify Setup
+### Step 3: Verify Your Environment
+
+**In Codespaces or Local Setup:**
 ```bash
-# Check Python version
-python --version  # Should be 3.13+
+# Test that pandas and pytest are working
+python -c "import pandas as pd; print(f'Pandas {pd.__version__} ready!')"
+pip install pytest
+python -c "import pytest; print(f'pytest {pytest.__version__} ready!')"
 
-# Verify dependencies
-uv pip list
-
-# Run initial tests (these will fail until you implement functions)
-uv run pytest tests/ -v
+# You should see both libraries working!
 ```
 
 ---
 
-## 📁 Project Structure
+## 📁 Understanding Your Assignment Files
 
 ```
-your-assignment-repo/
-├── 📜 README.md                     # This file
-├── 📜 pyproject.toml                # Project configuration
-├── 🔧 uv.lock                       # Dependency lock file
-├── 📁 .github/
-│   ├── 📁 workflows/
-│   │   └── 📜 automated-grading.yml # CI/CD pipeline ⚙️
-│   └── 📁 scripts/
-│       └── 📜 calculate_grade.py    # Grading logic
-├── 📁 src/pandas_analysis/          # 👈 YOUR CODE GOES HERE
-│   ├── 📜 __init__.py
-│   ├── 📜 data_structures.py        # 🔥 Part 1: Implement these functions
-│   ├── 📜 data_subsetting.py        # 🔥 Part 2: Implement these functions  
-│   ├── 📜 data_joins.py             # 🔥 Part 3: Implement these functions
-│   └── 📜 file_operations.py        # 🔥 Part 4: Implement these functions
-├── 📁 tests/                        # ✅ Test files (DON'T EDIT)
-│   ├── 📜 test_data_structures.py   # Automated tests
-│   ├── 📜 test_data_subsetting.py   # Automated tests
-│   ├── 📜 test_data_joins.py        # Automated tests
-│   ├── 📜 test_file_operations.py   # Automated tests
-│   └── 📜 test_fixtures.py          # Test data
-├── 📁 benchmarks/                   # ⚡ Performance tests (DON'T EDIT)
-│   └── 📜 performance_tests.py      # Speed benchmarks
-└── 📁 data/                         # 📊 Sample datasets (PROVIDED)
-    ├── 📜 sample_gis_data.csv
-    ├── 📜 environmental_stations.csv
-    └── 📜 infrastructure_inventory.csv
+python-pandas/
+├── README.md                     # This file - your instructions
+├── src/
+│   └── pandas_basics.py          # 👈 YOUR CODE GOES HERE (5 functions to complete)
+├── tests/
+│   └── test_pandas_basics.py     # 🧪 Unit tests - learn professional testing!
+├── data/
+│   ├── weather_stations.csv      # Station location data
+│   ├── temperature_readings.csv  # Daily temperature measurements
+│   └── data_dictionary.md        # Explains what each column means
+├── pytest.ini                   # Test configuration
+├── requirements.txt              # Python dependencies
+└── .github/workflows/            # 🤖 Automated grading (CI/CD)
 ```
 
 ---
 
-## 📝 Assignment Tasks
+## 📝 Your Assignment Tasks
 
-You need to implement **4 modules** with specific functions that will be automatically tested:
+You need to implement **5 functions** in the file `src/pandas_basics.py`. Each function builds on the previous one, so complete them in order.
 
-### 🔧 Part 1: Data Structures (8 points)
-**File:** `src/pandas_analysis/data_structures.py`
+### 🔧 Part 1: Load and Explore Data (4 points)
+**Function:** `load_and_explore_gis_data(file_path)`
 
-Implement these functions:
-- `create_gis_series()` - Create pandas Series with proper indexing
-- `analyze_series_properties()` - Extract Series metadata
-- `create_gis_dataframe()` - Build DataFrame with type optimization  
-- `optimize_dataframe_memory()` - Reduce memory usage by 20%+
+**What to do:**
+1. Use `pd.read_csv()` to load a CSV file
+2. Print basic information about the dataset (shape, columns, data types)
+3. Display the first 5 rows using `.head()`
+4. Show summary statistics using `.describe()`
+5. Handle any obvious data issues
 
-### 📊 Part 2: Data Subsetting (10 points)  
-**File:** `src/pandas_analysis/data_subsetting.py`
+**Example output:**
+```
+Dataset loaded successfully!
+Shape: (150, 5) - 150 rows and 5 columns
+Columns: station_id, station_name, latitude, longitude, elevation_m
 
-Implement these functions:
-- `boolean_filter_environmental_data()` - Filter with boolean indexing
-- `multi_condition_analysis()` - Categorize data by conditions
-- `optimize_boolean_operations()` - Performance-optimized filtering
+First 5 rows:
+  station_id    station_name  latitude  longitude  elevation_m
+0    STN_001    Central Park    40.768    -73.982          35
+...
+```
 
-### 🔗 Part 3: Data Joins (7 points)
-**File:** `src/pandas_analysis/data_joins.py`  
+### 📊 Part 2: Filter Environmental Data (4 points)
+**Function:** `filter_environmental_data(df, min_temp=15, max_temp=30, quality="good")`
 
-Implement these functions:
-- `validate_join_keys()` - Pre-join validation
-- `smart_join_gis_data()` - Intelligent joining with stats
-- `complex_multi_dataset_join()` - Sequential multi-table joins
+**What to do:**
+1. Filter the DataFrame to show only rows where:
+   - Temperature is between min_temp and max_temp
+   - Data quality equals the specified quality level
+2. Print how many rows were kept vs. removed
+3. Return the filtered DataFrame
 
-### 💾 Part 4: File Operations (5 points)
-**File:** `src/pandas_analysis/file_operations.py`
+**Example output:**
+```
+Filtering data...
+Original dataset: 500 rows
+After filtering: 247 rows kept, 253 rows removed
+Filters applied:
+- Temperature between 15°C and 30°C
+- Data quality = 'good'
+```
 
-Implement these functions:
-- `robust_csv_reader()` - CSV reading with error handling  
-- `export_with_metadata()` - Save data with embedded metadata
+### 📈 Part 3: Calculate Basic Statistics (4 points)
+**Function:** `calculate_station_statistics(df)`
+
+**What to do:**
+1. Group the data by station_id using `.groupby()`
+2. Calculate mean temperature and humidity for each station
+3. Count how many readings each station has
+4. Create a summary DataFrame with these statistics
+5. Show the station with highest and lowest average temperature
+
+**Example output:**
+```
+Station Statistics Summary:
+station_id  avg_temperature  avg_humidity  reading_count
+STN_001            22.5           65.2            45
+STN_002            21.8           67.1            52
+...
+
+Hottest station: STN_005 (avg: 24.3°C)
+Coolest station: STN_012 (avg: 18.7°C)
+```
+
+### 🔗 Part 4: Join Station Data (4 points)
+**Function:** `join_station_data(stations_df, readings_df)`
+
+**What to do:**
+1. Use `pd.merge()` to join the stations and readings DataFrames
+2. Join on the common column `station_id`
+3. Print information about the join results
+4. Return the combined DataFrame
+
+**Example output:**
+```
+Joining station locations with temperature readings...
+Stations dataset: 15 stations
+Readings dataset: 500 readings  
+After joining: 500 rows (all readings matched to stations)
+New columns added: station_name, latitude, longitude, elevation_m
+```
+
+### 💾 Part 5: Save Processed Data (2 points)
+**Function:** `save_processed_data(df, output_file)`
+
+**What to do:**
+1. Save the DataFrame to a CSV file using `.to_csv()`
+2. Include proper headers and formatting
+3. Print confirmation that the file was saved
+4. Show the file size and location
+
+### Code Quality (2 points)
+Clean, readable code with good comments and proper error handling.
 
 ---
 
-## 🤖 Automated Grading System
+## 🧪 Learning Professional Unit Testing with pytest
 
-Every time you **push code** to GitHub, the automated grading system runs:
+**Important Learning Objective**: This assignment teaches you **unit testing** - a critical professional skill where you write tests to verify your code works correctly.
 
-### 📊 Grade Breakdown (30 points total)
-
-| Component | Points | What's Tested |
-|-----------|--------|---------------|
-| **Correctness** | 15 | Unit tests passing |
-| **Performance** | 5 | Speed benchmarks |  
-| **Code Quality** | 5 | Formatting, linting, type hints |
-| **Test Coverage** | 5 | How much code is tested |
-
-### 🔄 CI/CD Pipeline Steps
-
-1. **Code Quality Checks**
-   - Black formatting
-   - Ruff linting  
-   - MyPy type checking
-   - Bandit security scan
-
-2. **Correctness Testing**
-   - Unit tests for all functions
-   - Data integrity validation
-   - Edge case handling
-
-3. **Performance Benchmarks**
-   - Speed tests on large datasets
-   - Memory efficiency checks
-   - Algorithm optimization validation
-
-4. **Coverage Analysis**
-   - Test coverage measurement
-   - Code path analysis
-
-5. **Final Grade Calculation**
-   - Automated scoring
-   - Detailed feedback generation
-
----
-
-## 💻 Development Workflow
-
-### 🔧 Local Development
+### Step 1: Install Testing Dependencies
 
 ```bash
-# Make a new branch for your work
-git checkout -b pandas-implementation
+# In your Codespace or local environment
+pip install pytest pandas
 
-# Run tests while developing
-uv run pytest tests/test_data_structures.py -v
-
-# Check code quality
-uv run black src/ tests/
-uv run ruff check src/ tests/
-uv run mypy src/
-
-# Run performance benchmarks
-uv run pytest benchmarks/ --benchmark-only
-
-# Run all tests with coverage
-uv run pytest tests/ --cov=src --cov-report=html
+# OR if using conda
+conda install pytest pandas
 ```
 
-### 📈 Viewing Results
+### Step 2: Understanding Unit Tests
 
-**Local Results:**
+Look at `tests/test_pandas_basics.py` to see how professional unit tests work:
+
+```python
+# Example unit test structure
+import pytest
+import pandas as pd
+from src.pandas_basics import load_and_explore_gis_data
+
+def test_load_and_explore_gis_data():
+    """Test that function loads CSV and returns correct DataFrame"""
+    # Arrange: Set up test data
+    test_file = 'data/weather_stations.csv'
+    
+    # Act: Run the function
+    result = load_and_explore_gis_data(test_file)
+    
+    # Assert: Check the results
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) > 0
+    assert 'station_id' in result.columns
+```
+
+### Step 3: Run Unit Tests as You Develop
+
+**This is how professional developers work!** Test each function as you implement it:
+
 ```bash
-# Open coverage report
-open htmlcov/index.html  # macOS
-xdg-open htmlcov/index.html  # Linux
+# Run all tests
+pytest tests/
+
+# Run tests for a specific function
+pytest tests/test_pandas_basics.py::test_load_and_explore_gis_data -v
+
+# Run tests with detailed output
+pytest tests/ -v --tb=short
 ```
 
-**GitHub Results:**
-- Go to your repo → "Actions" tab
-- Click on latest workflow run
-- View detailed results and feedback
+You'll see output like:
+```
+======================== test session starts =========================
+tests/test_pandas_basics.py::test_load_and_explore_gis_data PASSED
+tests/test_pandas_basics.py::test_filter_environmental_data FAILED
+tests/test_pandas_basics.py::test_calculate_station_statistics PASSED
+tests/test_pandas_basics.py::test_join_station_data FAILED  
+tests/test_pandas_basics.py::test_save_processed_data PASSED
 
-### 🔄 Typical Development Cycle
+======================= 3 passed, 2 failed ========================
+```
 
-1. **Implement** a function in one of the 4 modules
-2. **Test locally**: `uv run pytest tests/test_[module].py -v`  
-3. **Fix issues** until tests pass
-4. **Check quality**: Run formatting and linting
-5. **Commit & push**: `git add . && git commit -m "Implement function_name" && git push`
-6. **Review feedback** in GitHub Actions results
-7. **Iterate** until all tests pass
+### Step 4: Debug Failing Tests
+
+When tests fail, pytest gives you detailed information:
+
+```bash
+# Get detailed failure information
+pytest tests/ -v -s
+
+# Use pytest's debugging features
+pytest tests/test_pandas_basics.py::test_filter_data --pdb
+```
+
+### Step 5: Submit Your Work
+
+When all tests pass locally:
+
+```bash
+# Verify all tests pass
+pytest tests/
+
+# Commit and push your work
+git add .
+git commit -m "Complete pandas assignment - all tests passing"  
+git push origin main
+```
+
+**🤖 Automated Grading:** When you push to GitHub, the CI/CD pipeline automatically runs the same pytest tests and calculates your grade. **No manual grading script needed** - the unit tests ARE the grading system!
 
 ---
 
-## 📊 Understanding Your Grade
+## 📊 Sample Data Provided
 
-### 🎯 Grade Thresholds
+### `weather_stations.csv`
+Information about 15 environmental monitoring stations in New York City:
+- `station_id` - Unique identifier (STN_001, STN_002, etc.)
+- `station_name` - Human-readable name
+- `latitude`, `longitude` - Location coordinates  
+- `elevation_m` - Height above sea level
+- `station_type` - Type of monitoring equipment
 
-| Grade | Total Score | Percentage | Status |
-|-------|-------------|------------|--------|
-| **A** | 27-30 | 90-100% | ✅ Excellent |
-| **B** | 24-26 | 80-89% | ✅ Good |  
-| **C** | 21-23 | 70-79% | ✅ Satisfactory |
-| **D** | 18-20 | 60-69% | ⚠️ Needs Improvement |
-| **F** | < 18 | < 60% | ❌ Unsatisfactory |
+### `temperature_readings.csv`
+95 daily temperature measurements from the stations:
+- `station_id` - Links to station information
+- `date` - When measurement was taken (Jan 15-21, 2023)
+- `temperature_c` - Air temperature in Celsius
+- `humidity_percent` - Relative humidity
+- `data_quality` - Quality flag ("good", "fair", "poor")
 
-### 📝 Reading Automated Feedback
+**💡 Tip:** Read `data/data_dictionary.md` for detailed information about the datasets!
 
-After each push, you'll get detailed feedback:
+---
 
-**✅ Example Passing Result:**
-```
-🎉 Overall Score: 28/30 (93.3%)
+## 📚 Learning Resources
 
-Component Scores:
-✅ Unit Tests: 14/15 (93%)
-✅ Performance: 5/5 (100%) 
-✅ Code Quality: 4/5 (80%)
-✅ Test Coverage: 5/5 (100%)
+### Pandas Basics
+- [10 Minutes to Pandas](https://pandas.pydata.org/docs/user_guide/10min.html) - Quick tutorial
+- [Pandas Cheat Sheet](https://pandas.pydata.org/Pandas_Cheat_Sheet.pdf) - Reference guide
 
-💡 Feedback:
-✅ Excellent work! Code meets professional standards
-⚡ All performance benchmarks passed
-✨ Consider adding more type hints for full score
-```
+### Key Functions You'll Use
+```python
+# Load data
+df = pd.read_csv('filename.csv')
 
-**❌ Example Failing Result:**
-```
-❌ Overall Score: 16/30 (53.3%)
+# Explore data
+df.head()        # Show first 5 rows
+df.info()        # Show column info
+df.describe()    # Summary statistics
 
-Component Scores:
-❌ Unit Tests: 8/15 (53%)
-❌ Performance: 2/5 (40%)
-✅ Code Quality: 4/5 (80%) 
-❌ Test Coverage: 2/5 (40%)
+# Filter rows
+filtered = df[df['column'] > value]
+filtered = df[(df['temp'] > 15) & (df['quality'] == 'good')]
 
-💡 Feedback:
-🔧 Focus on making your functions pass the unit tests
-⚡ Consider optimizing algorithms for better performance
-🎯 Write more comprehensive tests to increase coverage
+# Group and calculate
+stats = df.groupby('station_id')['temperature'].mean()
+
+# Join dataframes  
+combined = pd.merge(df1, df2, on='common_column')
+
+# Save results
+df.to_csv('output.csv', index=False)
 ```
 
 ---
 
 ## 🛠️ Troubleshooting
 
-### ❓ Common Issues
+### Common Issues and Solutions
 
-**🐛 Tests are failing**
-```bash
-# Run specific test with detailed output
-uv run pytest tests/test_data_structures.py::TestCreateGISSeries::test_basic_series_creation -v -s
+**"FileNotFoundError: No such file or directory"**
+- Make sure you're in the assignment directory
+- Check that data files are in the `data/` folder
+- Use `pwd` to see your current location
 
-# Debug with print statements
-# Add print() statements to your functions to debug
-```
+**"KeyError: 'column_name'"**  
+- Check column names using `df.columns`
+- Column names are case-sensitive
+- Look for extra spaces in column names
 
-**🐌 Performance benchmarks failing**
-```bash
-# Run benchmarks locally to see timings
-uv run pytest benchmarks/ --benchmark-only -v
+**"Tests are failing but my code looks right"**
+- Read the error messages carefully
+- Print intermediate results to debug: `print(df.head())`
+- Make sure your function returns the right data type
+- Check that your filtering conditions are correct
 
-# Profile your code
-uv run python -m cProfile -s cumtime your_script.py
-```
-
-**💥 Import errors**
-```bash
-# Make sure you're in the right directory
-pwd  # Should show your assignment directory
-
-# Reinstall dependencies
-uv sync --all-extras --dev
-```
-
-**🔧 Code quality issues**
-```bash
-# Auto-fix formatting
-uv run black src/ tests/
-
-# See detailed linting issues  
-uv run ruff check src/ tests/ --show-source
-
-# Fix type hints
-uv run mypy src/ --show-error-codes
-```
-
-### 🆘 Getting Help
-
-1. **Check the automated feedback** first - it usually tells you exactly what's wrong
-2. **Read the test files** in `tests/` to understand what's expected
-3. **Run tests locally** before pushing to GitHub
-4. **Ask on the discussion forum** with specific error messages
-5. **Attend office hours** for complex debugging
+**"Grade script shows 0 points"**
+- Run `python test_my_functions.py` first
+- Fix any failing tests before running `grade.py`
+- Make sure all 5 functions are implemented
+- Check that function names are spelled correctly
 
 ---
 
-## 📤 Submission Instructions
+## 📤 Submission Requirements
 
-### 🎯 Final Submission Process
+### What to Submit
+1. **Completed code**: All 5 functions working in `src/pandas_basics.py`
+2. **Passing tests**: `grade.py` shows 20/20 points
+3. **Git commit**: Push your final code to your repository
 
-1. **Ensure all tests pass locally:**
-   ```bash
-   uv run pytest tests/ -v
-   ```
+### Grading Breakdown (20 points total)
+- **Function 1** (4 pts): Load and explore data correctly
+- **Function 2** (4 pts): Filter data with proper conditions  
+- **Function 3** (4 pts): Calculate statistics by group
+- **Function 4** (4 pts): Join datasets successfully
+- **Function 5** (2 pts): Save data correctly
+- **Code Quality** (2 pts): Clean, readable code with comments
 
-2. **Check your final grade:**
-   ```bash
-   python .github/scripts/calculate_grade.py
-   ```
-
-3. **Push your final code:**
-   ```bash
-   git add .
-   git commit -m "Final submission - all tests passing"
-   git push origin main
-   ```
-
-4. **Verify automated grading:**
-   - Go to GitHub Actions
-   - Ensure latest run shows "✅ PASS"
-   - Final score should be ≥18 points (60%)
-
-5. **Submit on Canvas:**
-   - Submit your **GitHub repository URL**
-   - Include your **final automated grade screenshot**
-
-### ✅ Submission Checklist
-
-- [ ] All 4 modules implemented (`data_structures.py`, `data_subsetting.py`, `data_joins.py`, `file_operations.py`)
-- [ ] All unit tests passing (green ✅ in GitHub Actions)  
-- [ ] Performance benchmarks meeting requirements
-- [ ] Code quality checks passing (Black, Ruff, MyPy)
-- [ ] Final score ≥ 18/30 points (60%)
-- [ ] Repository URL submitted on Canvas
-- [ ] Grade report screenshot submitted
+### Success Checklist
+- [ ] All functions implemented in `src/pandas_basics.py`
+- [ ] `pytest tests/` shows all tests passing locally
+- [ ] GitHub Actions shows green checkmark (automated tests pass)
+- [ ] Code is clean and well-commented
+- [ ] You understand how unit testing works
+- [ ] Final commit pushed to GitHub
 
 ---
 
-## 🎓 Professional Skills Developed
+## 🎓 Why This Matters for GIS
 
-### 🔥 Industry-Relevant Capabilities
-- **Automated Testing**: Write code that passes comprehensive test suites
-- **Performance Optimization**: Optimize algorithms for speed and memory
-- **Code Quality**: Follow professional formatting and linting standards  
-- **CI/CD Pipelines**: Experience with automated deployment workflows
-- **Documentation**: Write clear, maintainable code with proper type hints
+**Real-world applications:**
 
-### 🚀 Career Preparation
-- **Version Control**: Advanced git workflows with automated testing
-- **Code Review**: Understanding automated feedback and quality metrics
-- **Data Engineering**: Professional pandas techniques for large datasets
-- **DevOps Practices**: CI/CD pipeline configuration and management
+🌡️ **Environmental Monitoring:** Process sensor data, filter for quality, calculate station averages
 
----
+🏙️ **Urban Planning:** Combine census data with boundaries, analyze demographics by region
 
-## 📚 Additional Resources
+🌊 **Hydrology:** Join stream gauge data with station locations, identify flow patterns
 
-### 📖 Pandas Documentation
-- [Pandas Official Documentation](https://pandas.pydata.org/docs/)
-- [10 Minutes to Pandas](https://pandas.pydata.org/docs/user_guide/10min.html)
-- [Pandas Cookbook](https://pandas.pydata.org/docs/user_guide/cookbook.html)
+🌱 **Agriculture:** Process crop yield data, correlate with weather and soil conditions
 
-### 🧪 Testing Resources  
-- [Pytest Documentation](https://docs.pytest.org/)
-- [Python Testing Best Practices](https://realpython.com/pytest-python-testing/)
+📊 **Data Preparation:** Clean and prepare tabular data before importing into QGIS
 
-### ⚡ Performance Optimization
-- [Pandas Performance Tips](https://pandas.pydata.org/docs/user_guide/enhancingperf.html)
-- [Memory Usage Optimization](https://pandas.pydata.org/docs/user_guide/categorical.html)
-
-### 🔧 Code Quality Tools
-- [Black Code Formatter](https://black.readthedocs.io/)
-- [Ruff Linter](https://docs.astral.sh/ruff/)
-- [MyPy Type Checker](https://mypy.readthedocs.io/)
+**Next steps:** These pandas skills will be essential for upcoming **GeoPandas** assignments where you'll work with spatial data directly!
 
 ---
 
-## 🏆 Success Tips
+## 🆘 Getting Help
 
-1. **Start Early**: Begin implementing functions immediately - don't wait
-2. **Test Frequently**: Run tests after each function implementation  
-3. **Read Error Messages**: The automated feedback is very detailed
-4. **Focus on Correctness First**: Get tests passing before optimizing
-5. **Use Type Hints**: They help catch errors and improve grades
-6. **Ask Questions**: Use the discussion forum and office hours
-7. **Review Sample Data**: Understand the CSV files in the `data/` folder
-8. **Check GitHub Actions**: Monitor your automated grades regularly
+1. **Read pytest error messages** - they show exactly which assertions failed
+2. **Run individual tests** - `pytest tests/test_pandas_basics.py::test_function_name -v`
+3. **Use print statements** - debug your code by printing intermediate results  
+4. **Check the test file** - understand what the tests expect your functions to do
+5. **Run tests frequently** - catch errors early with `pytest tests/`
+6. **Use pytest debugging** - `pytest tests/ --pdb` drops you into Python debugger
+7. **Ask on the course forum** - post specific test failure messages for help
+8. **Attend office hours** - get help understanding unit testing concepts
 
 ---
 
-**Good luck! 🚀 This assignment will teach you valuable professional skills while building strong pandas fundamentals.**
+**Remember:** Take your time to understand each function before moving to the next one. The step-by-step approach will make you successful! 🚀
 
-**Remember: The automated grading system is your friend - it provides immediate, detailed feedback to help you succeed!**
+**Good luck!**
