@@ -61,24 +61,26 @@ Learn the **essential pandas skills** you need for GIS data analysis! This assig
 git clone https://github.com/your-org/your-assignment-repo.git
 cd your-assignment-repo
 
-# Create conda environment
-conda create -n gis-pandas python=3.11 pandas jupyter
-conda activate gis-pandas
+# Install uv (modern Python package manager)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# OR use pip if you prefer
-pip install pandas jupyter
+# Sync dependencies (this creates a virtual environment automatically)
+uv sync --group test --group dev
+
+# Activate the virtual environment (optional - uv run handles this automatically)
+source .venv/bin/activate
 ```
 
 ### Step 3: Verify Your Environment
 
 **In Codespaces or Local Setup:**
 ```bash
-# Test that pandas and pytest are working
-python -c "import pandas as pd; print(f'Pandas {pd.__version__} ready!')"
-pip install pytest
-python -c "import pytest; print(f'pytest {pytest.__version__} ready!')"
+# Test that pandas and pytest are working with uv
+uv run python -c "import pandas as pd; print(f'Pandas {pd.__version__} ready!')"
+uv run python -c "import pytest; print(f'pytest {pytest.__version__} ready!')"
 
 # You should see both libraries working!
+# Note: uv automatically manages the virtual environment
 ```
 
 ---
@@ -96,8 +98,10 @@ python-pandas/
 │   ├── weather_stations.csv      # Station location data
 │   ├── temperature_readings.csv  # Daily temperature measurements
 │   └── data_dictionary.md        # Explains what each column means
-├── pytest.ini                   # Test configuration
-├── requirements.txt              # Python dependencies
+├── pytest.ini                   # Test configuration  
+├── pyproject.toml               # Modern Python project configuration (replaces requirements.txt)
+├── uv.lock                      # Locked dependency versions for reproducible builds
+├── requirements.txt              # Legacy dependency file (kept for compatibility)
 └── .github/workflows/            # 🤖 Automated grading (CI/CD)
 ```
 
@@ -210,11 +214,11 @@ Clean, readable code with good comments and proper error handling.
 ### Step 1: Install Testing Dependencies
 
 ```bash
-# In your Codespace or local environment
-pip install pytest pandas
+# In your Codespace or local environment with uv
+uv sync --group test
 
-# OR if using conda
-conda install pytest pandas
+# This automatically installs pytest, pandas, and all testing dependencies
+# No need to manually install individual packages!
 ```
 
 ### Step 2: Understanding Unit Tests
@@ -246,14 +250,14 @@ def test_load_and_explore_gis_data():
 **This is how professional developers work!** Test each function as you implement it:
 
 ```bash
-# Run all tests
-pytest tests/
+# Run all tests with uv
+uv run pytest tests/
 
 # Run tests for a specific function
-pytest tests/test_pandas_basics.py::test_load_and_explore_gis_data -v
+uv run pytest tests/test_pandas_basics.py::test_load_and_explore_gis_data -v
 
 # Run tests with detailed output
-pytest tests/ -v --tb=short
+uv run pytest tests/ -v --tb=short
 ```
 
 You'll see output like:
@@ -274,10 +278,10 @@ When tests fail, pytest gives you detailed information:
 
 ```bash
 # Get detailed failure information
-pytest tests/ -v -s
+uv run pytest tests/ -v -s
 
 # Use pytest's debugging features
-pytest tests/test_pandas_basics.py::test_filter_data --pdb
+uv run pytest tests/test_pandas_basics.py::test_filter_data --pdb
 ```
 
 ### Step 5: Submit Your Work
@@ -286,7 +290,7 @@ When all tests pass locally:
 
 ```bash
 # Verify all tests pass
-pytest tests/
+uv run pytest tests/
 
 # Commit and push your work
 git add .

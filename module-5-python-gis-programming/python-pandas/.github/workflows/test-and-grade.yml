@@ -20,14 +20,31 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-          cache: "pip"
+
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
 
       - name: 📦 Install Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pandas pytest pytest-cov pytest-html
-          # Install any additional requirements if they exist
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          echo "📦 Installing dependencies with uv..."
+          # Install core dependencies and test tools
+          uv sync --group test
+          echo "✅ Dependencies installed successfully"
+
+      - name: 🔒 Verify Dependency Lock File
+        run: |
+          echo "🔒 Checking uv.lock for reproducible builds..."
+          if [ -f "uv.lock" ]; then
+            echo "✅ uv.lock found - checking if dependencies are up-to-date"
+            uv lock --check
+            echo "✅ Dependencies are properly locked and up-to-date"
+          else
+            echo "❌ uv.lock not found - dependencies may not be reproducible"
+            echo "💡 Run 'uv lock' locally to generate lock file"
+            exit 1
+          fi
 
       - name: 🔍 Verify Project Structure
         run: |
@@ -62,7 +79,7 @@ jobs:
       - name: 🔧 Verify Function Imports
         run: |
           echo "🔧 Testing if functions can be imported..."
-          python -c "
+          uv run python -c "
           import sys
           sys.path.insert(0, 'src')
           try:
@@ -95,8 +112,8 @@ jobs:
         run: |
           echo "🧪 Running pytest unit tests..."
 
-          # Run pytest with detailed output and capture results
-          pytest tests/ \
+          # Run pytest with detailed output and capture results using uv
+          uv run pytest tests/ \
             --verbose \
             --tb=short \
             --color=yes \
@@ -113,7 +130,7 @@ jobs:
         id: grade
         run: |
           echo "📊 Calculating grade using professional grading script..."
-          python grade.py --results test-results.xml --output grade-report.json
+          uv run python ./github/scripts/calculate_grade.py --results test-results.xml --output grade-report.json
 
       - name: 📋 Load Grade Results
         if: always()
@@ -121,7 +138,7 @@ jobs:
           echo "📋 Loading grade results for workflow steps..."
           if [ -f "grade-report.json" ]; then
             # Extract grade info from JSON if environment variables aren't set
-            python -c "
+            uv run python -c "
             import json
             import os
 
