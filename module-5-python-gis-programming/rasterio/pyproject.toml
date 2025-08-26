@@ -1,160 +1,285 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
-name = "python-rasterio-assignment"
+name = "gist-604b-python-rasterio"
 version = "1.0.0"
-description = "GIST 604B - Python Rasterio Assignment: Core Raster Processing Functions"
+description = "GIST 604B Module 5 - Python Rasterio Assignment for Real Geospatial Data Processing"
 readme = "README.md"
 authors = [
-    {name = "Student", email = "student@arizona.edu"},
-]
-license = {text = "MIT"}
-keywords = ["gis", "rasterio", "raster", "python", "geospatial"]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Education",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Scientific/Engineering :: GIS",
-    "Topic :: Education",
+    { name = "GIST 604B Student", email = "student@example.edu" }
 ]
 requires-python = ">=3.11"
+keywords = ["gis", "rasterio", "remote-sensing", "geospatial", "education", "assignment"]
 
+# Core dependencies for the assignment
 dependencies = [
     # Core raster processing
-    "rasterio>=1.3.9,<2.0",
-    "numpy>=1.26.0,<2.0",
+    "rasterio>=1.3.9,<2.0.0",
+    "numpy>=1.24.0,<2.0.0",
 
-    # Geospatial operations
-    "shapely>=2.0.0,<3.0",
+    # Geospatial operations and vector integration
     "geopandas>=0.14.0,<0.15.0",
-    "pandas>=2.1.0,<3.0",
-    "pyproj>=3.6.0,<4.0",
-    "fiona>=1.9.0,<2.0",
+    "shapely>=2.0.0,<3.0.0",
+    "fiona>=1.9.0,<2.0.0",
+    "pandas>=2.0.0,<3.0.0",
+    "pyproj>=3.6.0,<4.0.0",
+
+    # Real data downloading and processing
+    "requests>=2.28.0,<3.0.0",
+    "tqdm>=4.64.0,<5.0.0",
 
     # Visualization
-    "matplotlib>=3.8.0,<4.0",
+    "matplotlib>=3.8.0,<4.0.0",
+
+    # Optional: Cloud optimized geotiff support
+    "rio-cogeo>=5.0.0,<6.0.0",
 ]
 
+# Optional dependency groups for different use cases
 [project.optional-dependencies]
+# Development and testing tools
 test = [
-    "pytest>=7.4.0,<8.0",
-    "pytest-cov>=4.1.0,<5.0",
-    "pytest-html>=4.1.0,<5.0",
-    "pytest-timeout>=2.2.0,<3.0",
+    "pytest>=7.4.0,<8.0.0",
+    "pytest-cov>=4.1.0,<5.0.0",
+    "pytest-html>=4.1.0,<5.0.0",
+    "pytest-sugar>=0.9.0,<1.0.0",
+    "pytest-timeout>=2.2.0,<3.0.0",
 ]
 
+# Interactive development tools
 dev = [
-    "black>=23.0.0,<25.0",
-    "ruff>=0.1.0,<1.0",
-    "mypy>=1.5.0,<2.0",
+    "ipython>=8.0.0,<9.0.0",
+    "jupyter>=1.0.0,<2.0.0",
+    "notebook>=7.0.0,<8.0.0",
+    "jupyterlab>=4.0.0,<5.0.0",
+]
+
+# Advanced geospatial data tools
+data = [
+    # STAC (SpatioTemporal Asset Catalog) support
+    "pystac>=1.10.0",
+    "pystac-client>=0.8.0",
+
+    # Advanced raster analysis
+    "xarray>=2024.1.0",
+    "rioxarray>=0.15.0",
+
+    # Web mapping and visualization
+    "contextily>=1.6.0",
+    "folium>=0.16.0",
+]
+
+# NASA/USGS API access (optional - requires authentication)
+nasa = [
+    "earthaccess>=0.7.0,<1.0.0",
+    "planetary-computer>=1.0.0,<2.0.0",
+]
+
+# All optional dependencies for complete environment
+all = [
+    "pytest>=7.4.0,<8.0.0",
+    "pytest-cov>=4.1.0,<5.0.0",
+    "pytest-html>=4.1.0,<5.0.0",
+    "pytest-sugar>=0.9.0,<1.0.0",
+    "pytest-timeout>=2.2.0,<3.0.0",
+    "ipython>=8.0.0,<9.0.0",
+    "jupyter>=1.0.0,<2.0.0",
+    "notebook>=7.0.0,<8.0.0",
+    "jupyterlab>=4.0.0,<5.0.0",
+    "pystac>=1.10.0",
+    "pystac-client>=0.8.0",
+    "xarray>=2024.1.0",
+    "rioxarray>=0.15.0",
+    "contextily>=1.6.0",
+    "folium>=0.16.0",
 ]
 
 [project.urls]
-Repository = "https://github.com/ua-gist604b/python-rasterio"
-Documentation = "https://github.com/ua-gist604b/python-rasterio#readme"
-"Bug Tracker" = "https://github.com/ua-gist604b/python-rasterio/issues"
+"Homepage" = "https://github.com/classroom/gist-604b-python-rasterio"
+"Repository" = "https://github.com/classroom/gist-604b-python-rasterio"
+"Issues" = "https://github.com/classroom/gist-604b-python-rasterio/issues"
 
-# ==============================================================================
-# Tool Configuration
-# ==============================================================================
-
-# Black code formatting
-[tool.black]
-line-length = 88
-target-version = ['py311']
-include = '\.pyi?$'
-
-# Ruff linting
-[tool.ruff]
-target-version = "py311"
-line-length = 88
-select = [
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "F",    # pyflakes
-    "I",    # isort
-    "B",    # flake8-bugbear
-    "UP",   # pyupgrade
-    "SIM",  # flake8-simplify
-]
-ignore = [
-    "E501",   # Line too long, handled by black
-    "B008",   # Do not perform function calls in argument defaults
+# Modern uv dependency groups (preferred over optional-dependencies)
+[dependency-groups]
+# Essential testing dependencies
+test = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-html>=4.1.0",
+    "pytest-sugar>=0.9.7",
+    "pytest-timeout>=2.2.0",
 ]
 
-[tool.ruff.per-file-ignores]
-"tests/*" = ["B018", "S101"]
-
-# MyPy type checking
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = false
-check_untyped_defs = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-
-[[tool.mypy.overrides]]
-module = [
-    "rasterio.*",
-    "geopandas.*",
-    "shapely.*",
-    "fiona.*",
-    "pyproj.*",
+# Development and interactive tools
+dev = [
+    "ipython>=8.37.0",
+    "jupyter>=1.1.1",
+    "notebook>=7.4.5",
+    "jupyterlab>=4.0.11",
+    "black>=24.3.0",
+    "ruff>=0.3.0",
 ]
-ignore_missing_imports = true
 
-# Pytest configuration
+# Advanced geospatial data processing
+data = [
+    "pystac>=1.10.0",
+    "pystac-client>=0.8.0",
+    "xarray>=2024.1.0",
+    "rioxarray>=0.15.0",
+    "contextily>=1.6.0",
+    "folium>=0.16.0",
+]
+
+# Real data download and processing (used by setup scripts)
+download = [
+    "requests>=2.31.0",
+    "tqdm>=4.66.0",
+    "packaging>=23.0",
+]
+
+# NASA/USGS API access (advanced users)
+nasa = [
+    "earthaccess>=0.9.0",
+    "planetary-computer>=1.0.0",
+]
+
+# Tool configurations
 [tool.pytest.ini_options]
-minversion = "7.0"
+testpaths = ["tests"]
 addopts = [
     "-v",
     "--tb=short",
     "--strict-markers",
+    "--strict-config",
     "--cov=src",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml:coverage.xml",
+    "--timeout=300",  # 5 minute timeout for data processing tests
 ]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
+markers = [
+    "unit: Unit tests for individual functions",
+    "integration: Integration tests for function combinations",
+    "slow: Tests that take longer to run",
+    "data_download: Tests that require internet connectivity",
+    "real_data: Tests that use real downloaded geospatial data",
+]
+python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-markers = [
-    "slow: marks tests as slow running",
-    "integration: marks tests as integration tests",
-]
 filterwarnings = [
     "ignore::UserWarning",
     "ignore::DeprecationWarning",
     "ignore:.*GDAL.*:UserWarning",
     "ignore:.*Rasterio.*:UserWarning",
+    "ignore:.*shapely.*:UserWarning",
 ]
 
-# Coverage configuration
 [tool.coverage.run]
 source = ["src"]
 omit = [
-    "tests/*",
     "*/tests/*",
-    "*/test_*.py",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "grade.py",
+    "*/data/create_sample_data.py",  # Data creation script
+    "*/data/setup_rasterio_data.py", # Setup script
 ]
 
 [tool.coverage.report]
-show_missing = true
-precision = 2
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
     "raise AssertionError",
     "raise NotImplementedError",
+    "if 0:",
     "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+precision = 2
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+extend-exclude = [
+    "__pycache__",
+    ".pytest_cache",
+    ".coverage",
+    "htmlcov",
+    "*.egg-info",
+    ".venv",
+    "grade.py",
+    "*/data/downloads/*",  # Downloaded data files
+    "*/data/processed/*",  # Processed data outputs
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # Pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501", # Line too long (handled by formatter)
+    "B008", # Do not perform function calls in argument defaults
+    "F401", # Imported but unused (common in assignment templates)
+    "E402", # Module level import not at top of file (common in notebooks)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | \.pytest_cache
+  | __pycache__
+  | data/downloads
+  | data/processed
+)/
+'''
+
+# Assignment metadata for instructors and tools
+[tool.assignment]
+course = "GIST 604B - Open Source GIS Programming"
+module = "5"
+title = "Python Rasterio for Real Geospatial Data Processing"
+semester = "Fall 2024"
+estimated_hours = "3-4"
+difficulty = "intermediate"
+functions_required = [
+    "load_and_explore_raster",
+    "calculate_raster_statistics",
+    "extract_raster_subset",
+    "visualize_raster_data"
+]
+points_total = 20
+grading_categories = [
+    {name = "Load and Explore Raster", points = 5},
+    {name = "Calculate Raster Statistics", points = 5},
+    {name = "Extract Raster Subset", points = 5},
+    {name = "Visualize Raster Data", points = 3},
+    {name = "Integration Tests", points = 2}
+]
+data_sources = [
+    "NASA SRTM Digital Elevation Model",
+    "USGS Landsat 8 Surface Reflectance",
+    "NASA MODIS Land Surface Temperature",
+    "Synthetic fallback data when real data unavailable"
 ]
