@@ -1,0 +1,309 @@
+name: Automated Testing and Grading
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: # Allow manual runs
+
+jobs:
+  test-and-grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🌍 Install System Geospatial Dependencies
+        run: |
+          echo "🌍 Installing GDAL and geospatial libraries..."
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            gdal-bin \
+            libgdal-dev \
+            libgeos-dev \
+            libproj-dev \
+            python3-dev \
+            build-essential
+
+          # Set environment variables for GDAL
+          echo "GDAL_DATA=$(gdal-config --datadir)" >> $GITHUB_ENV
+          echo "PROJ_LIB=/usr/share/proj" >> $GITHUB_ENV
+
+          # Verify GDAL installation
+          gdalinfo --version
+          echo "✅ Geospatial dependencies installed successfully"
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: 📦 Install Python Dependencies
+        run: |
+          echo "📦 Installing Python dependencies with uv..."
+
+          # Install core rasterio and geospatial dependencies
+          uv pip install --system \
+            "rasterio>=1.3.9,<2.0" \
+            "numpy>=1.26.0,<2.0" \
+            "matplotlib>=3.8.0,<4.0" \
+            "shapely>=2.0.0,<3.0" \
+            "geopandas>=0.14.0,<0.15.0" \
+            "pandas>=2.1.0,<3.0" \
+            "pyproj>=3.6.0,<4.0" \
+            "fiona>=1.9.0,<2.0"
+
+          # Install testing and development tools
+          uv pip install --system \
+            "pytest>=7.4.0,<8.0" \
+            "pytest-cov>=4.1.0,<5.0" \
+            "pytest-html>=4.1.0,<5.0" \
+            "pytest-timeout>=2.2.0,<3.0"
+
+          echo "✅ Python dependencies installed successfully"
+
+      - name: 🔍 Verify Installation
+        run: |
+          echo "🔍 Verifying rasterio installation..."
+          uv run python -c "
+          import rasterio
+          import numpy as np
+          import matplotlib.pyplot as plt
+          import geopandas as gpd
+          from shapely.geometry import box
+          print('✅ All core packages imported successfully')
+          print(f'Rasterio version: {rasterio.__version__}')
+          print(f'NumPy version: {np.__version__}')
+          print(f'Matplotlib version: {plt.matplotlib.__version__}')
+
+          # Test GDAL integration
+          from osgeo import gdal
+          print(f'GDAL version: {gdal.__version__}')
+          print('✅ Geospatial stack verified')
+          "
+
+      - name: 🔍 Verify Project Structure
+        run: |
+          echo "🔍 Checking project structure..."
+          echo "Current directory contents:"
+          ls -la
+
+          echo -e "\n📁 Source directory:"
+          if [ -d "src" ]; then
+            ls -la src/
+          else
+            echo "❌ No src/ directory found"
+            exit 1
+          fi
+
+          echo -e "\n🧪 Tests directory:"
+          if [ -d "tests" ]; then
+            ls -la tests/
+          else
+            echo "❌ No tests/ directory found"
+            exit 1
+          fi
+
+          echo -e "\n📊 Creating test data directory:"
+          mkdir -p data
+          echo "✅ Data directory ready for test data generation"
+
+      - name: 🔧 Verify Function Imports
+        run: |
+          echo "🔧 Testing if functions can be imported..."
+          uv run python -c "
+          import sys
+          sys.path.insert(0, 'src')
+          try:
+              from rasterio_basics import (
+                  load_and_explore_raster,
+                  calculate_raster_statistics,
+                  extract_raster_subset,
+                  visualize_raster_data
+              )
+              print('✅ All functions imported successfully!')
+              print('✅ Functions found:')
+              print('  - load_and_explore_raster')
+              print('  - calculate_raster_statistics')
+              print('  - extract_raster_subset')
+              print('  - visualize_raster_data')
+          except ImportError as e:
+              print(f'❌ Import Error: {e}')
+              print('❌ Make sure all 4 functions are defined in src/rasterio_basics.py')
+              exit(1)
+          except Exception as e:
+              print(f'❌ Error: {e}')
+              print('❌ Check for syntax errors in your code')
+              exit(1)
+          "
+
+      - name: 🧪 Run Unit Tests
+        id: pytest
+        run: |
+          echo "🧪 Running pytest unit tests..."
+
+          # Run pytest with detailed output and capture results using uv
+          uv run pytest tests/ \
+            --verbose \
+            --tb=short \
+            --color=yes \
+            --junit-xml=test-results.xml \
+            --html=test-report.html \
+            --self-contained-html \
+            --cov=src \
+            --cov-report=term \
+            --cov-report=html \
+            --cov-report=xml \
+          || echo "TESTS_FAILED=true" >> $GITHUB_ENV
+
+      - name: 📊 Calculate Grade
+        id: grade
+        run: |
+          echo "📊 Calculating grade using professional grading script..."
+          uv run python ./.github/scripts/calculate_grade.py --results test-results.xml --output grade-report.json
+
+      - name: 📋 Load Grade Results
+        if: always()
+        run: |
+          echo "📋 Loading grade results for workflow steps..."
+          if [ -f "grade-report.json" ]; then
+            # Extract grade info from JSON if environment variables aren't set
+            uv run python -c "
+            import json
+            import os
+
+            try:
+                with open('grade-report.json', 'r') as f:
+                    grade_data = json.load(f)
+
+                # Set environment variables if not already set
+                env_file = os.environ.get('GITHUB_ENV', '')
+                if env_file:
+                    with open(env_file, 'a') as f:
+                        if not os.environ.get('LETTER_GRADE'):
+                            f.write(f\"LETTER_GRADE={grade_data.get('letter_grade', 'F')}\n\")
+                        if not os.environ.get('GRADE_PERCENTAGE'):
+                            f.write(f\"GRADE_PERCENTAGE={grade_data.get('percentage', 0):.1f}\n\")
+                        if not os.environ.get('POINTS'):
+                            f.write(f\"POINTS={grade_data.get('total_points', 0)}\n\")
+                        if not os.environ.get('TESTS_PASSED'):
+                            f.write(f\"TESTS_PASSED={grade_data.get('tests_passed', 0)}\n\")
+                        if not os.environ.get('TESTS_TOTAL'):
+                            f.write(f\"TESTS_TOTAL={grade_data.get('tests_total', 0)}\n\")
+
+                        # Set test failure flag if needed
+                        if grade_data.get('tests_total', 0) > grade_data.get('tests_passed', 0):
+                            f.write('TESTS_FAILED=true\n')
+
+                    print('✅ Grade information loaded successfully')
+                else:
+                    print('⚠️  GITHUB_ENV not available')
+            except Exception as e:
+                print(f'❌ Error loading grade results: {e}')
+            "
+          else
+            echo "⚠️  No grade report found - using basic test results"
+          fi
+
+      - name: 📋 Generate Summary Report
+        if: always()
+        run: |
+          echo "📋 ASSIGNMENT SUMMARY REPORT" >> $GITHUB_STEP_SUMMARY
+          echo "================================" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "$GRADE_PERCENTAGE" ]; then
+            echo "🎯 **Final Grade: $LETTER_GRADE ($GRADE_PERCENTAGE%)**" >> $GITHUB_STEP_SUMMARY
+            echo "📊 **Points Earned: $POINTS/20**" >> $GITHUB_STEP_SUMMARY
+            echo "🧪 **Tests Passed: $TESTS_PASSED/$TESTS_TOTAL**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Add status message
+          if [ "$TESTS_FAILED" = "true" ]; then
+            echo "❌ **Status: Some tests failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔧 Next Steps:" >> $GITHUB_STEP_SUMMARY
+            echo "1. Review the detailed test output above" >> $GITHUB_STEP_SUMMARY
+            echo "2. Run \`pytest tests/ -v\` locally for debugging" >> $GITHUB_STEP_SUMMARY
+            echo "3. Fix failing functions and push again" >> $GITHUB_STEP_SUMMARY
+            echo "4. Ask for help in office hours if stuck" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Status: All tests passed!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🎉 Congratulations!" >> $GITHUB_STEP_SUMMARY
+            echo "Your assignment is working correctly and ready for submission." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Test Details:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function 1** (load_and_explore_raster): Load raster files and examine properties" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function 2** (calculate_raster_statistics): Compute statistics from raster data" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function 3** (extract_raster_subset): Extract subsets and clip raster data" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function 4** (visualize_raster_data): Create visualizations and maps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🛠️ Professional Skills Learned:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Unit testing with pytest" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Raster data processing with rasterio" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Geospatial data analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Test-driven development" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Continuous integration workflows" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Professional Git workflows" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📎 Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ github.run_number }}
+          path: |
+            test-results.xml
+            test-report.html
+            htmlcov/
+            grade-report.json
+          retention-days: 30
+
+      - name: 📊 Upload Coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: false
+
+      - name: ✅ Assignment Status
+        if: always()
+        run: |
+          echo "============================================"
+          echo "🎓 GIST 604B - PYTHON RASTERIO ASSIGNMENT"
+          echo "============================================"
+
+          if [ -n "$GRADE_PERCENTAGE" ]; then
+            echo "📊 FINAL GRADE: $LETTER_GRADE ($GRADE_PERCENTAGE%)"
+            echo "🎯 POINTS: $POINTS/20"
+
+            if [ "$LETTER_GRADE" = "A" ] || [ "$LETTER_GRADE" = "B" ]; then
+              echo "🎉 EXCELLENT! Your assignment meets requirements."
+              echo "📤 Ready for instructor review."
+            elif [ "$LETTER_GRADE" = "C" ]; then
+              echo "👍 GOOD WORK! Minor issues to address."
+              echo "🔍 Review failing tests and improve."
+            else
+              echo "🔧 NEEDS IMPROVEMENT"
+              echo "📚 Review assignment instructions and try again."
+            fi
+          else
+            echo "❌ GRADING FAILED - Check test execution"
+          fi
+
+          echo "============================================"
+          echo "💡 Remember: This automated feedback helps you learn!"
+          echo "🤝 Ask questions in office hours if you need help."
+          echo "============================================"

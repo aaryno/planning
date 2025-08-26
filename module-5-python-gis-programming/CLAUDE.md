@@ -1,5 +1,7 @@
 # GIST 604B Module 5 - Assignment Development Guide
 
+Location: planning/module-5-python-gis-programming/CLAUDE.md
+
 **Course**: GIST 604B - Open Source GIS Programming  
 **Module**: 5 - Python GIS Programming  
 **Updated**: December 2024  
