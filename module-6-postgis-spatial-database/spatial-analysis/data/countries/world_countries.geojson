@@ -1,0 +1,22 @@
+{
+"type": "FeatureCollection",
+"name": "world_countries",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "name": "USA", "continent": "North America", "area_km2": 9834000, "population": 331900000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -125.0, 25.0 ], [ -66.0, 25.0 ], [ -66.0, 49.0 ], [ -125.0, 49.0 ], [ -125.0, 25.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Canada", "continent": "North America", "area_km2": 9985000, "population": 38000000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -140.0, 42.0 ], [ -53.0, 42.0 ], [ -53.0, 83.0 ], [ -140.0, 83.0 ], [ -140.0, 42.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Mexico", "continent": "North America", "area_km2": 1964000, "population": 128900000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -117.0, 14.0 ], [ -86.0, 14.0 ], [ -86.0, 32.0 ], [ -117.0, 32.0 ], [ -117.0, 14.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Brazil", "continent": "South America", "area_km2": 8515000, "population": 212600000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -74.0, -34.0 ], [ -35.0, -34.0 ], [ -35.0, 5.0 ], [ -74.0, 5.0 ], [ -74.0, -34.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Argentina", "continent": "South America", "area_km2": 2780000, "population": 45200000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -74.0, -55.0 ], [ -53.0, -55.0 ], [ -53.0, -22.0 ], [ -74.0, -22.0 ], [ -74.0, -55.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "UK", "continent": "Europe", "area_km2": 243000, "population": 67900000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -8.0, 50.0 ], [ 2.0, 50.0 ], [ 2.0, 59.0 ], [ -8.0, 59.0 ], [ -8.0, 50.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "France", "continent": "Europe", "area_km2": 672000, "population": 67400000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -5.0, 42.0 ], [ 8.0, 42.0 ], [ 8.0, 51.0 ], [ -5.0, 51.0 ], [ -5.0, 42.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Germany", "continent": "Europe", "area_km2": 357000, "population": 83200000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 6.0, 47.0 ], [ 15.0, 47.0 ], [ 15.0, 55.0 ], [ 6.0, 55.0 ], [ 6.0, 47.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Spain", "continent": "Europe", "area_km2": 506000, "population": 47350000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -9.0, 36.0 ], [ 3.0, 36.0 ], [ 3.0, 44.0 ], [ -9.0, 44.0 ], [ -9.0, 36.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Italy", "continent": "Europe", "area_km2": 301000, "population": 59550000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 7.0, 36.0 ], [ 18.0, 36.0 ], [ 18.0, 47.0 ], [ 7.0, 47.0 ], [ 7.0, 36.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Russia", "continent": "Asia/Europe", "area_km2": 17100000, "population": 145900000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 20.0, 42.0 ], [ 170.0, 42.0 ], [ 170.0, 82.0 ], [ 20.0, 82.0 ], [ 20.0, 42.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "China", "continent": "Asia", "area_km2": 9597000, "population": 1440000000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 74.0, 18.0 ], [ 135.0, 18.0 ], [ 135.0, 54.0 ], [ 74.0, 54.0 ], [ 74.0, 18.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "India", "continent": "Asia", "area_km2": 3287000, "population": 1380000000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 68.0, 7.0 ], [ 97.0, 7.0 ], [ 97.0, 37.0 ], [ 68.0, 37.0 ], [ 68.0, 7.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Australia", "continent": "Oceania", "area_km2": 7692000, "population": 25700000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 113.0, -44.0 ], [ 154.0, -44.0 ], [ 154.0, -10.0 ], [ 113.0, -10.0 ], [ 113.0, -44.0 ] ] ] } },
+{ "type": "Feature", "properties": { "name": "Japan", "continent": "Asia", "area_km2": 378000, "population": 125800000 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 130.0, 31.0 ], [ 146.0, 31.0 ], [ 146.0, 46.0 ], [ 130.0, 46.0 ], [ 130.0, 31.0 ] ] ] } }
+]
+}

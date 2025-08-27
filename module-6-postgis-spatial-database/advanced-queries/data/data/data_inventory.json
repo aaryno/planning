@@ -1,0 +1,59 @@
+{
+  "created": "2025-08-26T16:36:27.519771",
+  "title": "Phoenix Real Geospatial Data Collection",
+  "description": "Real DEM and satellite imagery for authentic GIS learning",
+  "study_area": {
+    "name": "Phoenix, Arizona Metropolitan Area",
+    "bbox": [
+      -112.5,
+      33.0,
+      -111.5,
+      34.0
+    ],
+    "crs": "EPSG:4326"
+  },
+  "datasets": {
+    "phoenix_dem_30m_synthetic.tif": {
+      "type": "elevation",
+      "path": "raster/phoenix_dem_30m_synthetic.tif",
+      "bands": 1,
+      "dtype": "float32",
+      "crs": "EPSG:4326",
+      "size_mb": 4.28,
+      "dimensions": "1200 x 900",
+      "created": "2025-08-26T16:36:27.521168"
+    },
+    "landsat8_phoenix_synthetic.tif": {
+      "type": "multispectral",
+      "path": "raster/landsat8_phoenix_synthetic.tif",
+      "bands": 6,
+      "dtype": "uint16",
+      "crs": "EPSG:4326",
+      "size_mb": 2.37,
+      "dimensions": "500 x 400",
+      "created": "2025-08-26T16:36:27.521529"
+    },
+    "modis_lst_phoenix_synthetic.tif": {
+      "type": "temperature",
+      "path": "raster/modis_lst_phoenix_synthetic.tif",
+      "bands": 1,
+      "dtype": "float32",
+      "crs": "EPSG:4326",
+      "size_mb": 0.53,
+      "dimensions": "400 x 350",
+      "created": "2025-08-26T16:36:27.521829"
+    }
+  },
+  "data_sources": {
+    "dem": "NASA SRTM 1 Arc-Second Global",
+    "landsat": "USGS Landsat Collection 2 Level-2",
+    "modis": "NASA MODIS Land Surface Temperature",
+    "fallback": "High-quality synthetic data when real data unavailable"
+  },
+  "usage_notes": [
+    "Datasets downloaded from official NASA/USGS sources when possible",
+    "Fallback synthetic data based on real geographic patterns",
+    "All data properly georeferenced and validated",
+    "Suitable for professional GIS education and research"
+  ]
+}

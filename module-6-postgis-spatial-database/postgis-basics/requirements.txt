@@ -1,0 +1,43 @@
+# LEGACY COMPATIBILITY FILE
+# =========================
+# This requirements.txt is maintained for backward compatibility only.
+#
+# PREFERRED APPROACH: Use pyproject.toml with uv package manager
+#   uv sync --group test --group dev
+#
+# This file is automatically kept in sync with pyproject.toml dependencies
+# for systems that still require requirements.txt format.
+
+# Core dependencies (automatically managed by uv)
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.0.0
+
+# Testing and development dependencies
+# Note: These are in optional dependency groups in pyproject.toml
+pytest>=7.0.0,<8.0.0
+pytest-cov>=4.0.0,<5.0.0
+pytest-html>=3.1.0,<4.0.0
+pytest-sugar>=0.9.0,<1.0.0
+
+# Interactive development tools
+ipython>=8.0.0,<9.0.0
+jupyter>=1.0.0,<2.0.0
+notebook>=7.0.0,<8.0.0
+
+# MODERN WORKFLOW COMMANDS:
+# -------------------------
+# Instead of: pip install -r requirements.txt
+# Use:        uv sync --group test --group dev
+#
+# Instead of: pip install pandas pytest
+# Use:        uv add pandas && uv add --group test pytest
+#
+# Instead of: python script.py
+# Use:        uv run python script.py
+#
+# Benefits of uv:
+# - Faster dependency resolution and installation
+# - Automatic virtual environment management
+# - Reproducible builds with uv.lock
+# - Modern Python project standards (pyproject.toml)
+# - Better dependency conflict resolution

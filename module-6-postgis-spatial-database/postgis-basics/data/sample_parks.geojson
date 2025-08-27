@@ -1,0 +1,299 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:4326"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-112.1500, 33.4000],
+          [-112.0000, 33.4000],
+          [-112.0000, 33.5000],
+          [-112.1500, 33.5000],
+          [-112.1500, 33.4000]
+        ]]
+      },
+      "properties": {
+        "name": "Phoenix Mountains Preserve",
+        "type": "Mountain Preserve",
+        "area_sqm": 10500000,
+        "area_acres": 2594,
+        "established": 1973,
+        "managing_agency": "City of Phoenix",
+        "activities": "Hiking, Rock Climbing, Wildlife Viewing",
+        "elevation_min_m": 350,
+        "elevation_max_m": 800
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-110.9800, 32.1800],
+          [-110.9000, 32.1800],
+          [-110.9000, 32.2600],
+          [-110.9800, 32.2600],
+          [-110.9800, 32.1800]
+        ]]
+      },
+      "properties": {
+        "name": "Tucson Mountain Park",
+        "type": "County Park",
+        "area_sqm": 8200000,
+        "area_acres": 2025,
+        "established": 1929,
+        "managing_agency": "Pima County",
+        "activities": "Desert Museum, Hiking, Scenic Drives",
+        "elevation_min_m": 600,
+        "elevation_max_m": 1400
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-111.8800, 33.3800],
+          [-111.8200, 33.3800],
+          [-111.8200, 33.4400],
+          [-111.8800, 33.4400],
+          [-111.8800, 33.3800]
+        ]]
+      },
+      "properties": {
+        "name": "Papago Park",
+        "type": "City Park",
+        "area_sqm": 5100000,
+        "area_acres": 1260,
+        "established": 1959,
+        "managing_agency": "City of Phoenix / City of Tempe",
+        "activities": "Zoo, Botanical Garden, Golf, Hiking",
+        "elevation_min_m": 350,
+        "elevation_max_m": 450
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-111.9800, 33.4800],
+          [-111.9200, 33.4800],
+          [-111.9200, 33.5200],
+          [-111.9800, 33.5200],
+          [-111.9800, 33.4800]
+        ]]
+      },
+      "properties": {
+        "name": "McDowell Mountain Regional Park",
+        "type": "Regional Park",
+        "area_sqm": 85000000,
+        "area_acres": 21099,
+        "established": 1991,
+        "managing_agency": "Maricopa County",
+        "activities": "Camping, Hiking, Mountain Biking, Horseback Riding",
+        "elevation_min_m": 450,
+        "elevation_max_m": 1100
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-111.7000, 35.1500],
+          [-111.6000, 35.1500],
+          [-111.6000, 35.2500],
+          [-111.7000, 35.2500],
+          [-111.7000, 35.1500]
+        ]]
+      },
+      "properties": {
+        "name": "Coconino National Forest - Flagstaff Area",
+        "type": "National Forest",
+        "area_sqm": 45000000,
+        "area_acres": 11120,
+        "established": 1908,
+        "managing_agency": "U.S. Forest Service",
+        "activities": "Camping, Hiking, Skiing, Fishing",
+        "elevation_min_m": 2100,
+        "elevation_max_m": 2400
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-111.8200, 34.8400],
+          [-111.7400, 34.8400],
+          [-111.7400, 34.9000],
+          [-111.8200, 34.9000],
+          [-111.8200, 34.8400]
+        ]]
+      },
+      "properties": {
+        "name": "Red Rock State Park",
+        "type": "State Park",
+        "area_sqm": 1100000,
+        "area_acres": 286,
+        "established": 1991,
+        "managing_agency": "Arizona State Parks",
+        "activities": "Hiking, Photography, Environmental Education",
+        "elevation_min_m": 1200,
+        "elevation_max_m": 1400
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-112.3000, 33.5600],
+          [-112.2200, 33.5600],
+          [-112.2200, 33.6200],
+          [-112.3000, 33.6200],
+          [-112.3000, 33.5600]
+        ]]
+      },
+      "properties": {
+        "name": "White Tank Mountain Regional Park",
+        "type": "Regional Park",
+        "area_sqm": 120000000,
+        "area_acres": 29271,
+        "established": 1963,
+        "managing_agency": "Maricopa County",
+        "activities": "Camping, Hiking, Picnicking, Petroglyphs",
+        "elevation_min_m": 400,
+        "elevation_max_m": 1200
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-110.3500, 31.5200],
+          [-110.2800, 31.5200],
+          [-110.2800, 31.5800],
+          [-110.3500, 31.5800],
+          [-110.3500, 31.5200]
+        ]]
+      },
+      "properties": {
+        "name": "Coronado National Memorial",
+        "type": "National Memorial",
+        "area_sqm": 19000000,
+        "area_acres": 4750,
+        "established": 1952,
+        "managing_agency": "National Park Service",
+        "activities": "Hiking, Historical Education, Wildlife Viewing",
+        "elevation_min_m": 1500,
+        "elevation_max_m": 2400
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-114.7000, 32.6500],
+          [-114.6000, 32.6500],
+          [-114.6000, 32.7300],
+          [-114.7000, 32.7300],
+          [-114.7000, 32.6500]
+        ]]
+      },
+      "properties": {
+        "name": "Castle Dome Museum and Park",
+        "type": "Historic Park",
+        "area_sqm": 3500000,
+        "area_acres": 865,
+        "established": 1967,
+        "managing_agency": "Private",
+        "activities": "Historical Tours, Mining History, Desert Exploration",
+        "elevation_min_m": 200,
+        "elevation_max_m": 400
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-111.2000, 33.3800],
+          [-111.1400, 33.3800],
+          [-111.1400, 33.4400],
+          [-111.2000, 33.4400],
+          [-111.2000, 33.3800]
+        ]]
+      },
+      "properties": {
+        "name": "Usery Mountain Regional Park",
+        "type": "Regional Park",
+        "area_sqm": 14500000,
+        "area_acres": 3648,
+        "established": 1967,
+        "managing_agency": "Maricopa County",
+        "activities": "Camping, Hiking, Archery, Horseback Riding",
+        "elevation_min_m": 400,
+        "elevation_max_m": 900
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-112.5000, 33.3500],
+          [-112.4200, 33.3500],
+          [-112.4200, 33.4100],
+          [-112.5000, 33.4100],
+          [-112.5000, 33.3500]
+        ]]
+      },
+      "properties": {
+        "name": "Estrella Mountain Regional Park",
+        "type": "Regional Park",
+        "area_sqm": 78000000,
+        "area_acres": 19840,
+        "established": 1954,
+        "managing_agency": "Maricopa County",
+        "activities": "Golf, Hiking, Fishing, Boating",
+        "elevation_min_m": 300,
+        "elevation_max_m": 800
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-110.9200, 32.3600],
+          [-110.8600, 32.3600],
+          [-110.8600, 32.4200],
+          [-110.9200, 32.4200],
+          [-110.9200, 32.3600]
+        ]]
+      },
+      "properties": {
+        "name": "Catalina State Park",
+        "type": "State Park",
+        "area_sqm": 22000000,
+        "area_acres": 5511,
+        "established": 1974,
+        "managing_agency": "Arizona State Parks",
+        "activities": "Camping, Hiking, Birding, Equestrian Trails",
+        "elevation_min_m": 800,
+        "elevation_max_m": 1000
+      }
+    }
+  ]
+}

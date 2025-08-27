@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  postgis:
+    image: postgis/postgis:15-3.4
+    container_name: gis_analysis_db
+    environment:
+      # Database connection parameters
+      POSTGRES_DB: gis_analysis
+      POSTGRES_USER: gis_student
+      POSTGRES_PASSWORD: gis604b
+
+      # PostGIS configuration
+      POSTGRES_MULTIPLE_EXTENSIONS: postgis,hstore,postgis_topology,postgis_raster,pgrouting
+
+      # Performance tuning for development
+      POSTGRES_SHARED_PRELOAD_LIBRARIES: pg_stat_statements
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      # Initialize database with any SQL scripts in data directory
+      - ./data:/docker-entrypoint-initdb.d
+
+      # Persist database data between container restarts
+      - postgis_data:/var/lib/postgresql/data
+
+      # Custom PostgreSQL configuration (optional)
+      - ./postgres.conf:/etc/postgresql/postgresql.conf:ro
+
+    # Resource limits for student development environment
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+    # Health check to ensure database is ready
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gis_student -d gis_analysis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Custom command for performance optimization in development
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_destination=stderr
+      -c log_line_prefix='%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql-%Y-%m-%d_%H%M%S.log
+      -c logging_collector=off
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+
+  # Optional: pgAdmin for database management (commented out by default)
+  # Uncomment if students want a GUI interface to the database
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: gis_pgadmin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: student@gist604b.edu
+  #     PGADMIN_DEFAULT_PASSWORD: gis604b
+  #     PGADMIN_DISABLE_POSTFIX: 'true'
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+  #   depends_on:
+  #     postgis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+
+volumes:
+  # Persistent volume for PostgreSQL data
+  postgis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./postgres_data
+
+  # Uncomment if using pgAdmin
+  # pgadmin_data:
+  #   driver: local
+
+networks:
+  default:
+    name: gis604b_network
+    driver: bridge
