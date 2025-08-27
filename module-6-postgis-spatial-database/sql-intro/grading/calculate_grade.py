@@ -132,11 +132,12 @@ class SQLGradingEngine:
                 result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.assignment_dir)
 
             # Parse test output to determine which tests passed/failed
-            self.parse_test_output(result.stdout, result.stderr, result.returncode)
+            self.parse_test_output(stdout, stderr, return_code)
 
             if self.verbose:
                 print(f"✅ Tests completed with return code: {result.returncode}")
                 print(f"📊 Passed: {self.count_passed_tests()}/{len(self.QUERY_CATEGORIES)}")
+                print(f"📝 Templates completed: {self.count_completed_templates()}/{len(self.QUERY_CATEGORIES)}")
 
             return self.test_results
 
@@ -175,37 +176,84 @@ class SQLGradingEngine:
                         self.test_results[category] = {
                             'passed': True,
                             'error': None,
-                            'score': config['points']
+                            'score': config['points'],
+                            'template_completed': self.is_template_completed(config['name'] + '.sql')
                         }
                         if self.verbose:
                             print(f"✅ {config['name']}: PASSED ({config['points']} points)")
                     elif 'FAILED' in line or '✗' in line:
+                        template_completed = self.is_template_completed(config['name'] + '.sql')
+                        error_msg = 'Test failed - check query logic and syntax'
+                        if not template_completed:
+                            error_msg = 'Template not completed - fill in the blanks'
+
                         self.test_results[category] = {
                             'passed': False,
-                            'error': 'Test failed - check query logic and syntax',
-                            'score': 0
+                            'error': error_msg,
+                            'score': 1 if template_completed else 0,  # Partial credit for completion
+                            'template_completed': template_completed
                         }
                         if self.verbose:
-                            print(f"❌ {config['name']}: FAILED (0 points)")
+                            status = "INCOMPLETE" if not template_completed else "FAILED"
+                            points = 1 if template_completed else 0
+                            print(f"❌ {config['name']}: {status} ({points} points)")
+                    elif 'SKIPPED' in line:
+                        template_completed = self.is_template_completed(config['name'] + '.sql')
+                        self.test_results[category] = {
+                            'passed': False,
+                            'error': 'Template not completed - fill in the blanks' if not template_completed else 'Query skipped during testing',
+                            'score': 1 if template_completed else 0,  # Partial credit for completion
+                            'template_completed': template_completed
+                        }
+                        if self.verbose:
+                            status = "TEMPLATE" if not template_completed else "SKIPPED"
+                            points = 1 if template_completed else 0
+                            print(f"🔄 {config['name']}: {status} ({points} points)")
 
-        # If we couldn't parse specific tests, make educated guesses based on overall success
+        # If we couldn't parse specific tests, make educated guesses based on template completion
         if return_code == 0 and not any(result['passed'] for result in self.test_results.values()):
             # All tests likely passed but we couldn't parse individual results
             for category in self.QUERY_CATEGORIES:
                 if self.sql_file_exists(self.QUERY_CATEGORIES[category]['name'] + '.sql'):
+                    template_completed = self.is_template_completed(self.QUERY_CATEGORIES[category]['name'] + '.sql')
                     self.test_results[category] = {
-                        'passed': True,
-                        'error': None,
-                        'score': self.QUERY_CATEGORIES[category]['points']
+                        'passed': template_completed,  # Only full credit if template is completed
+                        'error': None if template_completed else 'Template not completed',
+                        'score': self.QUERY_CATEGORIES[category]['points'] if template_completed else 1,
+                        'template_completed': template_completed
                     }
 
     def sql_file_exists(self, filename: str) -> bool:
         """Check if SQL file exists."""
         return (self.assignment_dir / 'sql' / filename).exists()
 
+    def is_template_completed(self, filename: str) -> bool:
+        """Check if SQL template has been completed (no blanks remaining)."""
+        sql_file = self.assignment_dir / 'sql' / filename
+        if not sql_file.exists():
+            return False
+
+        try:
+            with open(sql_file, 'r') as f:
+                content = f.read()
+
+            # Check for template blanks
+            has_blanks = '_____' in content or '________' in content
+            return not has_blanks
+        except Exception:
+            return False
+
     def count_passed_tests(self) -> int:
         """Count number of tests that passed."""
         return sum(1 for result in self.test_results.values() if result['passed'])
+
+    def count_completed_templates(self) -> int:
+        """Count number of SQL templates that have been completed."""
+        count = 0
+        for config in self.QUERY_CATEGORIES.values():
+            if self.is_template_completed(config['name'] + '.sql'):
+                count += 1
+        return count
 
     def calculate_grade(self) -> Dict[str, Any]:
         """Calculate overall grade and generate detailed report."""
@@ -218,12 +266,22 @@ class SQLGradingEngine:
         category_breakdown = {}
         for category, config in self.QUERY_CATEGORIES.items():
             result = self.test_results[category]
+            template_completed = result.get('template_completed', False)
+
+            if result['passed']:
+                status = 'passed'
+            elif template_completed:
+                status = 'completed_but_incorrect'
+            else:
+                status = 'template_not_completed'
+
             category_breakdown[category] = {
                 'query_file': 'sql/' + config['name'] + '.sql',
                 'earned': result['score'],
                 'possible': config['points'],
                 'percentage': (result['score'] / config['points']) * 100 if config['points'] > 0 else 0,
-                'status': 'passed' if result['passed'] else 'failed',
+                'status': status,
+                'template_completed': template_completed,
                 'concepts': config['concepts'],
                 'error': result['error']
             }
@@ -245,6 +303,7 @@ class SQLGradingEngine:
             'feedback': feedback,
             'performance_metrics': {
                 'queries_completed': self.count_completed_queries(),
+                'templates_completed': self.count_completed_templates(),
                 'syntax_accuracy': self.calculate_syntax_accuracy(),
                 'concept_mastery': self.calculate_concept_mastery()
             },
@@ -340,7 +399,16 @@ class SQLGradingEngine:
 
         # Specific concept feedback
         failed_categories = [cat for cat, result in self.test_results.items() if not result['passed']]
+        incomplete_templates = [cat for cat, result in self.test_results.items()
+                              if not result.get('template_completed', False)]
 
+        # Template completion feedback
+        if incomplete_templates:
+            incomplete_count = len(incomplete_templates)
+            feedback.append(f"📝 {incomplete_count} SQL templates still need to be completed (fill in the blanks).")
+            feedback.append("💡 Review the Learning Examples in README.md and adapt them for your tasks.")
+
+        # Concept-specific feedback
         if 'basic_select' in failed_categories or 'column_selection' in failed_categories:
             feedback.append("🎯 Practice basic SELECT syntax and column selection.")
 
@@ -356,12 +424,17 @@ class SQLGradingEngine:
         if 'complex_query' in failed_categories:
             feedback.append("🧩 Work on combining multiple SQL concepts in complex queries.")
 
-        # Encouragement
+        # Progress encouragement
         completed_queries = self.count_completed_queries()
-        if completed_queries == len(self.QUERY_CATEGORIES):
-            feedback.append("👏 Great effort completing all 10 SQL queries!")
-        elif completed_queries >= 7:
-            feedback.append(f"👍 Good progress with {completed_queries}/10 queries completed.")
+        completed_templates = self.count_completed_templates()
+
+        if completed_templates == len(self.QUERY_CATEGORIES):
+            feedback.append("👏 Excellent! All 10 SQL templates completed!")
+        elif completed_templates >= 7:
+            feedback.append(f"👍 Good progress with {completed_templates}/10 templates completed.")
+
+        if completed_templates > 0 and len(failed_categories) < completed_templates:
+            feedback.append("🚀 You're demonstrating good SQL understanding - keep refining your queries!")
 
         return feedback
 
@@ -387,7 +460,8 @@ class SQLGradingEngine:
             'TESTS_PASSED': str(grade_data['tests_passed']),
             'TESTS_TOTAL': str(grade_data['tests_total']),
             'SQL_QUERIES_COMPLETED': str(grade_data['performance_metrics']['queries_completed']),
-            'SYNTAX_ACCURACY': grade_data['performance_metrics']['syntax_accuracy']
+            'SYNTAX_ACCURACY': grade_data['performance_metrics']['syntax_accuracy'],
+            'TEMPLATES_COMPLETED': str(grade_data['performance_metrics']['templates_completed'])
         }
 
         # Set environment variables for CI/CD
@@ -416,6 +490,7 @@ class SQLGradingEngine:
         print(f"🎯 Grade: {report['letter_grade']}")
         print(f"✅ Tests Passed: {report['tests_passed']}/{report['tests_total']}")
         print(f"📝 Queries Completed: {report['performance_metrics']['queries_completed']}/10")
+        print(f"📋 Templates Completed: {report['performance_metrics']['templates_completed']}/10")
         print(f"🎭 Syntax Accuracy: {report['performance_metrics']['syntax_accuracy']}")
 
         print("\n📈 QUERY BREAKDOWN:")

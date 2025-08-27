@@ -1,503 +1,813 @@
-# PostGIS Fundamentals - Spatial Database Basics
+# PostGIS Basics - Spatial Database Fundamentals
 
-## 🎯 Assignment Overview
+**GIST 604B - Module 6: PostGIS Spatial Databases**  
+**Assignment Type:** Foundation Level (⭐⭐)  
+**Points:** 20 (8 queries × 2.5 points each)  
+**Estimated Time:** 2-3 hours  
+**Prerequisites:** SQL Introduction Assignment
 
-**Welcome to the world of spatial databases!** This assignment introduces you to **PostGIS**, the spatial extension for PostgreSQL that powers enterprise GIS applications worldwide. You'll learn when and why to use spatial databases, how to set up a PostGIS environment, and perform fundamental spatial operations using SQL.
+## 📖 Overview
 
-**Assignment:** PostGIS Fundamentals - Database Setup and Basic Queries  
-**Points:** 20 (4 functions × 5 points each)  
-**Estimated Time:** 3-4 hours  
-**Prerequisites:** Basic SQL knowledge, Python fundamentals  
+Welcome to your first PostGIS assignment! This foundational exercise introduces you to spatial database concepts using PostGIS, the spatial extension for PostgreSQL. You'll learn to work with geographic data, perform spatial analysis, and master the essential PostGIS functions that power modern GIS applications.
 
-### 🎓 Why This Matters for Your GIS Career
+### 🎯 Learning Objectives
 
-Spatial databases are the backbone of enterprise GIS systems. Understanding PostGIS will help you:
+By completing this assignment, you will:
 
-- **Scale Beyond Desktop:** Handle datasets too large for traditional GIS software
-- **Enable Multi-User Access:** Allow teams to work with the same data simultaneously  
-- **Integrate with Applications:** Connect GIS data to web apps, mobile apps, and business systems
-- **Optimize Performance:** Use spatial indexes for lightning-fast queries on massive datasets
-- **Ensure Data Integrity:** Maintain consistent, validated spatial data across your organization
+- **Inspect spatial data** using PostGIS metadata functions
+- **Create geometries** using various PostGIS constructors
+- **Calculate measurements** with accurate spatial analysis functions
+- **Transform coordinates** between different reference systems
+- **Query spatial relationships** between geographic features
+- **Perform buffer analysis** for proximity studies
+- **Execute spatial joins** combining multiple spatial datasets
+- **Build complex workflows** using advanced PostGIS operations
 
----
+### 🏢 Professional Context
+
+**Why These Skills Matter for Your GIS Career:**
+
+PostGIS is the industry-standard spatial database used by:
+- **Government agencies** for urban planning and environmental monitoring
+- **Tech companies** for location-based services (Uber, Google Maps, Zillow)
+- **Consulting firms** for spatial analysis and decision support
+- **Research institutions** for geographic data science
+- **Utilities** for infrastructure management and asset tracking
+
+**Real-World Applications:**
+- Finding optimal locations for new retail stores based on demographics
+- Analyzing environmental impact zones around industrial facilities  
+- Routing emergency services to minimize response times
+- Calculating flood risk areas for insurance and planning
+- Managing utility networks with spatial topology
 
 ## 🚀 Getting Started
 
-### Step 1: Accept the Assignment
+### Prerequisites
+- Completed SQL Introduction assignment (understanding of basic SQL)
+- Docker installed and running
+- VS Code with PostgreSQL extension (recommended)
+- Basic understanding of coordinate systems and GIS concepts
 
-1. Click the assignment link provided by your instructor
-2. Accept the GitHub Classroom assignment  
-3. Clone your personal repository to your development environment
+### Environment Setup
 
-### Step 2: Choose Your Development Environment
-
-#### 🌟 **Recommended: GitHub Codespaces (Cloud-Based)**
-
+**Step 1: Clone and Navigate**
 ```bash
-# Click "Code" → "Open with Codespaces" → "New codespace"
-# Wait for environment to load, then run setup:
-docker-compose up -d
-python -m pip install -e .
-```
-
-#### 🖥️ **Alternative: Local Development**
-
-**Requirements:**
-- Docker Desktop installed and running
-- Python 3.11 or higher
-- Git for version control
-
-```bash
-# Clone your repository
-git clone <your-repo-url>
 cd postgis-basics
+```
 
-# Start PostGIS database
+**Step 2: Start PostGIS Database**
+```bash
+# Start the PostGIS container
 docker-compose up -d
 
-# Install Python dependencies  
-pip install -e .
+# Wait for database initialization (about 30 seconds)
+docker-compose logs postgres
 ```
 
-### Step 3: Verify Your Environment
-
-#### Database Connection Test
+**Step 3: Verify Connection**
 ```bash
-# Test database is running
-docker-compose ps
-
-# Test Python connection
-python -c "import psycopg2; print('✅ Database libraries ready!')"
+# Test database connectivity
+docker exec -it postgis-basics-postgres psql -U postgres -d gis_fundamentals -c "SELECT postgis_version();"
 ```
 
-#### Run Initial Tests
+**Expected Output:**
+```
+                    postgis_version
+----------------------------------------------------
+ 3.3 USE_GEOS=1 USE_PROJ=1 USE_STATS=1
+```
+
+**Step 4: Explore the Data**
 ```bash
-# Should show 4 failing tests (expected!)
-pytest tests/ -v
+# List all spatial tables
+docker exec -it postgis-basics-postgres psql -U postgres -d gis_fundamentals -c "\dt"
+
+# Check data in cities table
+docker exec -it postgis-basics-postgres psql -U postgres -d gis_fundamentals -c "SELECT name, ST_AsText(geom) FROM cities LIMIT 3;"
 ```
 
-**✅ Success Indicators:**
-- Docker shows PostGIS container running
-- Python imports work without errors
-- Tests run (even if failing) - this confirms your environment is set up correctly
+## 📊 Dataset Overview
 
----
+Your PostGIS database contains five interconnected spatial tables representing various geographic features across the United States:
 
-## 📁 Understanding Your Assignment Files
+### `cities` Table (12 records)
+Point geometries representing major US cities with population data.
 
-```
-postgis-basics/
-├── README.md                          # This file - your assignment guide
-├── src/
-│   └── postgis_basics.py             # 🎯 YOUR CODE GOES HERE
-├── tests/
-│   └── test_postgis_basics.py        # Tests that verify your functions work
-├── notebooks/
-│   └── learning-postgis-basics.ipynb  # Step-by-step learning guide
-├── data/
-│   ├── sample_cities.csv             # City data for loading
-│   ├── sample_parks.geojson          # Park boundaries
-│   └── init.sql                      # Database initialization script
-├── docker-compose.yml                # PostGIS database setup
-└── .github/workflows/test-and-grade.yml # Automated grading
-```
-
-**🎯 Focus on `src/postgis_basics.py`** - This is where you'll implement your functions.
-
----
-
-## 📝 Your Assignment Tasks
-
-You'll implement **4 functions** that demonstrate fundamental PostGIS operations. Each function is worth **5 points** and focuses on core database skills you'll use in professional GIS work.
-
-### 🔌 Part 1: Database Connection and Setup (5 points)
-
-**Function:** `connect_to_postgis()`
-
-**What you'll learn:**
-- How to connect to PostGIS databases programmatically
-- Database connection best practices and error handling
-- Environment-based configuration for different deployment scenarios
-
-**Professional context:** Every GIS application that uses databases needs reliable connection management. You'll use these patterns in web apps, automated processing scripts, and data integration workflows.
-
-```python
-def connect_to_postgis():
-    """
-    Connect to the PostGIS database and verify the connection.
-    
-    Returns:
-        psycopg2.connection: Active database connection
-        
-    Requirements:
-        - Connect to localhost:5432, database 'gis_analysis'
-        - Username: 'gis_student', Password: 'gis604b'
-        - Verify PostGIS extension is available
-        - Handle connection errors gracefully
-    """
-```
-
-### 📊 Part 2: Load Spatial Data (5 points) 
-
-**Function:** `load_spatial_data(connection, cities_file, parks_file)`
-
-**What you'll learn:**
-- Import CSV and GeoJSON data into PostGIS tables
-- Create appropriate spatial data types and constraints
-- Handle coordinate system specifications and transformations
-
-**Professional context:** Data loading is a daily task for GIS database administrators. You'll learn techniques used in ETL (Extract, Transform, Load) processes that keep enterprise databases up-to-date.
-
-```python
-def load_spatial_data(connection, cities_file, parks_file):
-    """
-    Load city and park data into PostGIS tables.
-    
-    Parameters:
-        connection: Active database connection
-        cities_file: Path to cities CSV file (with lat/lon columns)
-        parks_file: Path to parks GeoJSON file
-        
-    Returns:
-        dict: Summary of loaded data (row counts, table info)
-        
-    Requirements:
-        - Create 'cities' table with Point geometry (EPSG:4326)
-        - Create 'parks' table with Polygon geometry (EPSG:4326)
-        - Include spatial indexes for performance
-        - Return summary statistics of loaded data
-    """
-```
-
-### 🔍 Part 3: Basic Spatial Queries (5 points)
-
-**Function:** `analyze_spatial_relationships(connection)`
-
-**What you'll learn:**
-- Execute spatial queries using PostGIS functions
-- Find spatial relationships (contains, intersects, distance)
-- Aggregate spatial data for summary statistics
-
-**Professional context:** These query patterns form the foundation of spatial analysis workflows. You'll use similar queries for site selection, impact analysis, and proximity studies.
-
-```python
-def analyze_spatial_relationships(connection):
-    """
-    Perform spatial analysis using PostGIS functions.
-    
-    Parameters:
-        connection: Active database connection
-        
-    Returns:
-        dict: Analysis results including:
-            - cities_in_parks: List of cities within park boundaries
-            - average_park_area: Average park area in square kilometers
-            - nearest_park_distances: Distance from each city to nearest park
-            
-    Requirements:
-        - Use ST_Contains() to find cities within parks
-        - Use ST_Area() to calculate park areas (convert to km²)
-        - Use ST_Distance() to find nearest park to each city
-        - Return results in organized dictionary format
-    """
-```
-
-### 💾 Part 4: Export and Validate Results (5 points)
-
-**Function:** `export_analysis_results(connection, output_directory)`
-
-**What you'll learn:**
-- Export spatial data to multiple formats (CSV, GeoJSON, Shapefile)
-- Validate data integrity and spatial accuracy
-- Create summary reports for stakeholders
-
-**Professional context:** Data export is crucial for sharing results with stakeholders, integrating with other systems, and creating deliverables. You'll learn formats used across different GIS platforms.
-
-```python
-def export_analysis_results(connection, output_directory):
-    """
-    Export analysis results to multiple formats.
-    
-    Parameters:
-        connection: Active database connection
-        output_directory: Directory path for output files
-        
-    Returns:
-        dict: Export summary with file paths and record counts
-        
-    Requirements:
-        - Export cities table to CSV with coordinates
-        - Export parks table to GeoJSON format
-        - Create a summary report (TXT file) with analysis statistics
-        - Validate exported data matches database content
-        - Return summary of exported files and record counts
-    """
-```
-
----
-
-## 🧪 Professional Development Workflow
-
-### Step 1: Learning with Notebooks
-
-Start with the **Jupyter notebook** to learn PostGIS concepts interactively:
-
-```bash
-# Start Jupyter server
-jupyter notebook notebooks/learning-postgis-basics.ipynb
-```
-
-The notebook covers:
-- **Database Connection Basics:** Understanding connection parameters and security
-- **PostGIS Functions Overview:** Key spatial functions and their use cases  
-- **Spatial Data Types:** Points, lines, polygons, and coordinate systems
-- **Query Optimization:** Using spatial indexes for better performance
-- **Real-World Examples:** See how these techniques solve actual GIS problems
-
-### Step 2: Implement Functions
-
-Open `src/postgis_basics.py` and implement each function:
-
-1. **Start Simple:** Get basic connectivity working first
-2. **Test Incrementally:** Run tests after each function to catch issues early
-3. **Use PostGIS Documentation:** Reference official PostGIS function documentation
-4. **Follow SQL Best Practices:** Use parameterized queries and proper error handling
-
-### Step 3: Test-Driven Development
-
-Run tests frequently to guide your development:
-
-```bash
-# Test specific function
-pytest tests/test_postgis_basics.py::test_connect_to_postgis -v
-
-# Test all functions
-pytest tests/ -v
-
-# Get detailed test output
-pytest tests/ -v --tb=short
-```
-
-### Step 4: Debug and Iterate
-
-Use these debugging strategies:
-
-```bash
-# Check database connection manually
-docker-compose exec postgis psql -U gis_student -d gis_analysis
-
-# View table contents
-docker-compose exec postgis psql -U gis_student -d gis_analysis -c "SELECT * FROM cities LIMIT 5;"
-
-# Check PostGIS functions
-docker-compose exec postgis psql -U gis_student -d gis_analysis -c "SELECT PostGIS_Version();"
-```
-
-### Step 5: Final Validation
-
-```bash
-# Run complete test suite
-pytest tests/ -v --cov=src
-
-# Verify all data exports
-ls -la outputs/
-
-# Check database performance
-pytest tests/ --benchmark-only
-```
-
----
-
-## 📊 Sample Data Provided
-
-### `sample_cities.csv`
-```csv
-name,latitude,longitude,population
-Phoenix,33.4484,-112.0740,1608139
-Tucson,32.2217,-110.9265,545975
-Flagstaff,35.1983,-111.6513,76831
-```
-
-### `sample_parks.geojson`  
-Contains park boundary polygons around Arizona cities with attributes including:
-- Park name and type
-- Area in square meters
-- Management agency
-- Establishment year
-
----
-
-## 🗄️ Database Connection Details
-
-**Database Configuration:**
-- **Host:** localhost (when using Docker)
-- **Port:** 5432
-- **Database:** gis_analysis
-- **Username:** gis_student
-- **Password:** gis604b
-- **Extensions:** PostGIS 3.4 enabled
-
-**Connection String Example:**
-```python
-conn_params = {
-    'host': 'localhost',
-    'port': 5432,
-    'database': 'gis_analysis', 
-    'user': 'gis_student',
-    'password': 'gis604b'
-}
-```
-
----
-
-## 📚 Learning Resources
-
-### PostGIS Documentation
-- [PostGIS Reference](https://postgis.net/documentation/) - Official function documentation
-- [PostGIS Tutorial](https://postgis.net/workshops/postgis-intro/) - Comprehensive learning guide
-- [Spatial SQL Cookbook](https://postgis.net/docs/using_postgis_dbmanagement.html) - Common query patterns
-
-### Key PostGIS Functions You'll Use
+**Sample data:**
 ```sql
--- Geometry creation and conversion
-ST_GeomFromText()     -- Create geometry from Well-Known Text
-ST_MakePoint()        -- Create point from coordinates  
-ST_AsGeoJSON()        -- Export geometry as GeoJSON
-
--- Spatial relationships
-ST_Contains()         -- Test if geometry A contains B
-ST_Intersects()       -- Test if geometries overlap
-ST_Distance()         -- Calculate distance between geometries
-
--- Measurements
-ST_Area()             -- Calculate polygon area
-ST_Length()           -- Calculate line length
-ST_Perimeter()        -- Calculate polygon perimeter
-
--- Indexing and performance
-CREATE INDEX ON table USING GIST (geom);  -- Spatial index
+SELECT name, state_code, population, ST_AsText(geom) AS location 
+FROM cities 
+WHERE state_code = 'CA' 
+LIMIT 2;
 ```
 
-### Python Database Libraries
-- **psycopg2:** Industry-standard PostgreSQL adapter for Python
-- **SQLAlchemy:** Object-relational mapping (ORM) for complex applications  
-- **GeoAlchemy2:** Spatial extensions for SQLAlchemy
+**Expected result:**
+```
+      name      | state_code | population |          location
+----------------+------------+------------+---------------------------
+ San Francisco  | CA         |  873965    | POINT(-122.4194 37.7749)
+ Los Angeles    | CA         |  3971883   | POINT(-118.2437 34.0522)
+```
+
+### `national_parks` Table (6 records)
+Polygon geometries representing major national parks with establishment dates and areas.
+
+**Sample data:**
+```sql
+SELECT name, state_code, area_sq_km, established_year 
+FROM national_parks 
+WHERE state_code = 'CA' 
+LIMIT 1;
+```
+
+**Expected result:**
+```
+   name   | state_code | area_sq_km | established_year
+----------+------------+------------+------------------
+ Yosemite | CA         |  3027.07   |      1890
+```
+
+### `highways` Table (5 records)
+LineString geometries representing major highway segments with length information.
+
+**Sample data:**
+```sql
+SELECT name, highway_type, length_km 
+FROM highways 
+WHERE highway_type = 'Interstate' 
+LIMIT 2;
+```
+
+### `weather_stations` Table (8 records)
+Point geometries for weather monitoring stations with dual coordinate systems (WGS84 and UTM).
+
+**Sample data:**
+```sql
+SELECT name, state_code, elevation_m, station_type 
+FROM weather_stations 
+WHERE state_code = 'WA' 
+LIMIT 2;
+```
+
+### `states` Table (6 records)
+Simplified polygon geometries representing US state boundaries.
+
+**Sample data:**
+```sql
+SELECT state_name, state_code, area_sq_km 
+FROM states 
+WHERE state_code IN ('WA', 'CA') 
+ORDER BY area_sq_km DESC;
+```
+
+## 📝 Assignment Tasks (8 Queries × 2.5 Points = 20 Points)
+
+Complete all SQL files in the `sql/` directory by filling in the template placeholders (`_____`). Each query builds upon previous concepts while introducing new PostGIS functionality.
+
+### Query 1: Spatial Data Inspection (2.5 points)
+
+**File:** `sql/01_spatial_inspection.sql`
+
+**Objective:** Learn to inspect spatial data properties using PostGIS metadata functions.
+
+**Learning Example - Weather Station Inspection:**
+```sql
+-- Example: Inspect weather station geometries (different from your task)
+SELECT 
+    name,
+    station_type,
+    ST_GeometryType(geom) AS geometry_type,
+    ST_SRID(geom) AS coordinate_system,
+    ST_AsText(geom) AS coordinates_text
+FROM weather_stations 
+WHERE state_code = 'OR'
+LIMIT 2;
+```
+
+**Expected Learning Example Result:**
+```
+      name      | station_type | geometry_type | coordinate_system |        coordinates_text
+----------------+--------------+---------------+-------------------+---------------------------
+ Portland Intl  | Airport      | ST_Point      |      4326         | POINT(-122.5951 45.5898)
+ Crater Lake    | Lake         | ST_Point      |      4326         | POINT(-122.1685 42.8684)
+```
+
+**Your Task:** Adapt this concept to examine **cities table** geometry properties, showing the first **5 cities** with their spatial metadata.
+
+**Key Functions to Use:**
+- `ST_GeometryType()` - Returns the geometry type (ST_Point, ST_Polygon, etc.)
+- `ST_SRID()` - Returns the Spatial Reference System Identifier
+- `ST_AsText()` - Converts geometry to human-readable WKT format
 
 ---
 
-## 🛠️ Troubleshooting
+### Query 2: Geometry Creation Functions (2.5 points)
 
-### Common Issues and Solutions
+**File:** `sql/02_geometry_creation.sql`
 
-**❌ Problem:** Docker container won't start
-```bash
-# Solution: Check Docker Desktop is running, then restart services
-docker-compose down
-docker-compose up -d --build
+**Learning Example - Portland Location Creation:**
+```sql
+-- Example: Create different geometries for Portland, OR (different from your task)
+SELECT 
+    'Portland Point' AS geometry_name,
+    ST_GeometryType(ST_SetSRID(ST_MakePoint(-122.6784, 45.5152), 4326)) AS geom_type,
+    ST_AsText(ST_SetSRID(ST_MakePoint(-122.6784, 45.5152), 4326)) AS geometry_wkt
+
+UNION ALL
+
+SELECT 
+    'Portland Square' AS geometry_name,
+    ST_GeometryType(ST_GeomFromText('POLYGON((-122.78 45.41, -122.58 45.41, -122.58 45.61, -122.78 45.61, -122.78 45.41))', 4326)) AS geom_type,
+    ST_AsText(ST_GeomFromText('POLYGON((-122.78 45.41, -122.58 45.41, -122.58 45.61, -122.78 45.61, -122.78 45.41))', 4326)) AS geometry_wkt
+
+UNION ALL
+
+SELECT 
+    'Portland Buffer' AS geometry_name,
+    ST_GeometryType(ST_Buffer(ST_SetSRID(ST_MakePoint(-122.6784, 45.5152), 4326), 0.05)) AS geom_type,
+    ST_AsText(ST_Buffer(ST_SetSRID(ST_MakePoint(-122.6784, 45.5152), 4326), 0.05)) AS geometry_wkt;
 ```
 
-**❌ Problem:** Can't connect to database
-```bash
-# Solution: Verify container is running and ports are available
-docker-compose ps
-docker-compose logs postgis
-```
+**Your Task:** Create three geometries for **Denver, Colorado** using the coordinates (-104.9903, 39.7392).
 
-**❌ Problem:** PostGIS functions not found
-```bash
-# Solution: Verify PostGIS extension is installed
-docker-compose exec postgis psql -U gis_student -d gis_analysis -c "SELECT PostGIS_Version();"
-```
-
-**❌ Problem:** Spatial index errors
-```bash
-# Solution: Check geometry column exists and has valid SRID
-docker-compose exec postgis psql -U gis_student -d gis_analysis -c "SELECT Find_SRID('public', 'cities', 'geom');"
-```
-
-**❌ Problem:** Python import errors
-```bash
-# Solution: Reinstall dependencies
-pip install -e .
-# or with uv
-uv sync
-```
+**Key Functions to Master:**
+- `ST_MakePoint(longitude, latitude)` - Creates point from coordinates
+- `ST_GeomFromText('WKT', SRID)` - Creates geometry from Well-Known Text
+- `ST_SetSRID(geometry, srid)` - Assigns spatial reference system
+- `ST_Buffer(geometry, distance)` - Creates buffer zone around geometry
 
 ---
 
-## 📤 Submission Requirements
+### Query 3: Spatial Measurements (2.5 points)
 
-### What to Submit
+**File:** `sql/03_spatial_measurements.sql`
 
-1. **✅ Completed `src/postgis_basics.py`** with all 4 functions implemented
-2. **✅ Passing tests** - all automated tests should pass
-3. **✅ Database verification** - your functions should work with the provided PostGIS setup
+**Learning Example - Weather Station Analysis:**
+```sql
+-- Example: Calculate measurements for weather stations (different from your task)
+SELECT 
+    'Seattle to Portland Distance' AS measurement_type,
+    ROUND(
+        ST_Distance_Sphere(
+            (SELECT geom FROM weather_stations WHERE name = 'Seattle WSFO'),
+            (SELECT geom FROM weather_stations WHERE name = 'Portland Intl')
+        ) / 1000, 2
+    ) AS distance_km
+
+UNION ALL
+
+SELECT 
+    'Olympic Park Area' AS measurement_type,
+    ROUND(
+        ST_Area(
+            ST_Transform(
+                (SELECT geom FROM national_parks WHERE name = 'Olympic'),
+                32610  -- UTM Zone 10N for Washington
+            )
+        ) / 1000000, 2  -- Convert sq meters to sq kilometers
+    ) AS area_sq_km;
+```
+
+**Your Task:** Calculate three different measurements:
+1. Distance between **Seattle and Portland cities**
+2. Area of **Yellowstone National Park**
+3. Length of the **I-5 highway section**
+
+**Key Functions for Accurate Measurements:**
+- `ST_Distance_Sphere()` - Accurate geographic distance on sphere
+- `ST_Area()` - Calculate area (use with ST_Transform for accuracy)
+- `ST_Length()` - Calculate length of linear features
+- `ST_Transform()` - Project to appropriate UTM zone for meter-based calculations
+
+---
+
+### Query 4: Coordinate System Transformations (2.5 points)
+
+**File:** `sql/04_coordinate_transformation.sql`
+
+**Learning Example - Park Coordinate Transformation:**
+```sql
+-- Example: Transform Yosemite park centroid coordinates (different from your task)
+SELECT 
+    'Yosemite Centroid' AS feature_name,
+    
+    -- Original WGS84 coordinates
+    ROUND(ST_X(ST_Centroid((SELECT geom FROM national_parks WHERE name = 'Yosemite'))), 6) AS wgs84_longitude,
+    ROUND(ST_Y(ST_Centroid((SELECT geom FROM national_parks WHERE name = 'Yosemite'))), 6) AS wgs84_latitude,
+    
+    -- Transformed to UTM Zone 11N coordinates (California)
+    ROUND(ST_X(ST_Transform(ST_Centroid((SELECT geom FROM national_parks WHERE name = 'Yosemite')), 32611))) AS utm_easting_m,
+    ROUND(ST_Y(ST_Transform(ST_Centroid((SELECT geom FROM national_parks WHERE name = 'Yosemite')), 32611))) AS utm_northing_m;
+```
+
+**Your Task:** Transform **Seattle WSFO weather station** coordinates between WGS84 and UTM Zone 10N, including verification by transforming back.
+
+**Key Coordinate Systems:**
+- **EPSG:4326** - WGS84 (longitude/latitude in degrees)
+- **EPSG:32610** - UTM Zone 10N (meters, good for US West Coast)
+- **EPSG:32613** - UTM Zone 13N (meters, good for Colorado/Wyoming)
+
+**Essential Functions:**
+- `ST_Transform(geometry, target_epsg)` - Convert between coordinate systems
+- `ST_X()` and `ST_Y()` - Extract coordinate components
+- Double transformation for accuracy verification
+
+---
+
+### Query 5: Spatial Relationships (2.5 points)
+
+**File:** `sql/05_spatial_relationships.sql`
+
+**Learning Example - Park and Station Relationships:**
+```sql
+-- Example: Find weather stations that are within national parks (different from your task)
+SELECT 
+    'Stations in Parks' AS query_type,
+    ws.name AS station_name,
+    p.name AS park_name,
+    ROUND(ST_Distance_Sphere(ws.geom, ST_Centroid(p.geom)) / 1000, 2) AS distance_km
+FROM weather_stations ws
+JOIN national_parks p ON ST_Within(ws.geom, p.geom)
+
+UNION ALL
+
+-- Find highways that cross state boundaries  
+SELECT 
+    'Highway-State Intersections' AS query_type,
+    h.name AS highway_name,
+    s.state_name AS intersected_state,
+    NULL AS distance_km
+FROM highways h
+JOIN states s ON ST_Intersects(h.geom, s.geom)
+ORDER BY query_type, station_name, highway_name;
+```
+
+**Your Task:** Execute three spatial relationship queries:
+1. Find **cities within Washington state**
+2. Find **highways that intersect with national parks**
+3. Find **weather stations within 100km of Seattle**
+
+**Essential Spatial Relationship Functions:**
+- `ST_Within(geom1, geom2)` - Tests if geom1 is completely inside geom2
+- `ST_Intersects(geom1, geom2)` - Tests if geometries share any space
+- `ST_DWithin(geom1, geom2, distance)` - Tests proximity within distance
+
+---
+
+### Query 6: Buffer Operations (2.5 points)
+
+**File:** `sql/06_buffer_operations.sql`
+
+**Learning Example - Seattle Analysis Zones:**
+```sql
+-- Example: Create analysis buffer around Seattle and find features (different from your task)
+WITH seattle_buffer AS (
+    SELECT ST_Buffer(
+        ST_Transform(geom, 32610),  -- Transform to UTM for accurate distance
+        75000  -- 75km = 75000 meters
+    ) AS buffer_geom
+    FROM cities 
+    WHERE name = 'Seattle'
+)
+SELECT 
+    'Seattle 75km Analysis Zone' AS analysis_type,
+    ws.name AS station_name,
+    ROUND(
+        ST_Distance(
+            ST_Transform((SELECT geom FROM cities WHERE name = 'Seattle'), 32610),
+            ST_Transform(ws.geom, 32610)
+        ) / 1000, 2
+    ) AS distance_from_seattle_km
+FROM weather_stations ws, seattle_buffer sb
+WHERE ST_Within(
+    ST_Transform(ws.geom, 32610), 
+    sb.buffer_geom
+)
+ORDER BY distance_from_seattle_km;
+```
+
+**Your Task:** Create and analyze three buffer operations:
+1. Create **50km buffer around Denver city**
+2. Create **10km corridor buffer along I-5 highway**
+3. Find **weather stations within Denver's buffer zone**
+
+**Buffer Analysis Concepts:**
+- **Point buffers** create circular zones for proximity analysis
+- **Line buffers** create corridors for infrastructure impact studies  
+- **Accurate buffering** requires UTM projection for meter-based distances
+- **Common Time Zones:** Zone 10N (West Coast), Zone 13N (Colorado), Zone 14N (Texas)
+
+---
+
+### Query 7: Spatial Joins (2.5 points)
+
+**File:** `sql/07_spatial_joins.sql`
+
+**Learning Example - Park Visitor Analysis:**
+```sql
+-- Example: Complex spatial joins for park accessibility analysis (different from your task)
+SELECT 
+    'Park Accessibility Analysis' AS join_type,
+    p.name AS park_name,
+    COUNT(c.city_id) AS nearby_cities_count,
+    ROUND(AVG(
+        ST_Distance_Sphere(c.geom, ST_Centroid(p.geom)) / 1000
+    ), 2) AS avg_distance_km,
+    SUM(c.population) AS total_population_within_200km
+FROM national_parks p
+LEFT JOIN cities c ON ST_DWithin(
+    ST_Transform(c.geom, 32610),
+    ST_Transform(ST_Centroid(p.geom), 32610),
+    200000  -- 200km = 200000 meters
+)
+GROUP BY p.name, p.park_id
+HAVING COUNT(c.city_id) > 0
+ORDER BY total_population_within_200km DESC;
+```
+
+**Your Task:** Execute three types of spatial joins:
+1. **Cities to states** with population aggregation
+2. **Weather stations to nearest cities** within 200km
+3. **Highways to states** with length calculations per state
+
+**Advanced Spatial Join Patterns:**
+- `LEFT JOIN` with spatial conditions for aggregation analysis
+- `DISTINCT ON` for nearest neighbor queries
+- `ST_Intersection()` with `ST_Length()` for partial feature measurements
+- Window functions for ranking spatial relationships
+
+---
+
+### Query 8: Complex Spatial Analysis (2.5 points)
+
+**File:** `sql/08_complex_analysis.sql`
+
+**Learning Example - Regional Infrastructure Analysis:**
+```sql
+-- Example: Multi-step infrastructure analysis (different from your task)
+WITH regional_analysis AS (
+    -- Step 1: Find cities near highways
+    SELECT 
+        c.name AS city_name,
+        c.population,
+        h.name AS nearest_highway,
+        MIN(ST_Distance_Sphere(c.geom, h.geom)) AS highway_distance_m
+    FROM cities c
+    CROSS JOIN highways h
+    GROUP BY c.city_id, c.name, c.population, h.name
+    HAVING MIN(ST_Distance_Sphere(c.geom, h.geom)) < 50000  -- Within 50km
+),
+infrastructure_summary AS (
+    -- Step 2: Summarize by highway
+    SELECT 
+        nearest_highway,
+        COUNT(*) AS cities_served,
+        SUM(population) AS total_population,
+        AVG(highway_distance_m / 1000) AS avg_distance_km
+    FROM regional_analysis
+    GROUP BY nearest_highway
+)
+SELECT 
+    is.nearest_highway AS highway_system,
+    is.cities_served,
+    is.total_population,
+    ROUND(is.avg_distance_km, 2) AS avg_city_distance_km,
+    -- Calculate service efficiency score
+    ROUND((is.total_population::DECIMAL / is.avg_distance_km), 0) AS efficiency_score
+FROM infrastructure_summary is
+ORDER BY efficiency_score DESC;
+```
+
+**Your Task:** Build a comprehensive **tourism analysis workflow**:
+1. Find **city-park pairs within 100km**
+2. Identify **closest weather station** for each pair
+3. Calculate **highway corridor connectivity**
+4. Generate **summary statistics** for the entire analysis region
+
+**Advanced PostGIS Workflow Concepts:**
+- **WITH clauses (CTEs)** for organizing multi-step analysis
+- **Window functions** for ranking and partitioning spatial data
+- **ST_Union()** for combining multiple geometries
+- **Complex aggregations** across spatial datasets
+- **Performance optimization** with proper indexing and projections
+
+## 🧪 Testing Your Solutions
+
+### Test Individual SQL Files
+
+Test a single query during development:
+
+```bash
+# Test spatial inspection query
+docker exec -it postgis-basics-postgres psql -U postgres -d gis_fundamentals -f sql/01_spatial_inspection.sql
+
+# Test geometry creation query  
+docker exec -it postgis-basics-postgres psql -U postgres -d gis_fundamentals -f sql/02_geometry_creation.sql
+```
+
+### Test All Queries at Once
+
+Run the complete test suite:
+
+```bash
+# Run all tests with detailed output
+python test_assignment.py -v
+
+# Run tests with shorter output
+python test_assignment.py --tb=short
+```
+
+### Interactive Testing
+
+Test your queries interactively in the PostGIS database:
+
+```bash
+# Connect to database for interactive testing
+docker exec -it postgis-basics-postgres psql -U postgres -d gis_fundamentals
+
+# Example interactive commands:
+gis_fundamentals=# SELECT postgis_version();
+gis_fundamentals=# \dt
+gis_fundamentals=# SELECT name, ST_AsText(geom) FROM cities LIMIT 2;
+gis_fundamentals=# \q
+```
+
+### Automated Testing and Grading
+
+The automated grading system tests your solutions for:
+
+- **Template completion** (no blanks remaining)
+- **SQL syntax correctness** (proper PostGIS function usage)
+- **Expected results** (correct data and structure)
+- **Spatial accuracy** (appropriate coordinate systems and measurements)
+- **Performance** (efficient queries with proper spatial indexing)
+
+```bash
+# Generate grade report
+python grading/calculate_grade.py --verbose
+```
+
+## 📋 Submission Requirements
+
+### Files to Submit
+
+Your completed assignment must include all SQL files with template blanks filled in:
+
+```
+sql/
+├── 01_spatial_inspection.sql      ✓ Complete
+├── 02_geometry_creation.sql       ✓ Complete  
+├── 03_spatial_measurements.sql    ✓ Complete
+├── 04_coordinate_transformation.sql ✓ Complete
+├── 05_spatial_relationships.sql   ✓ Complete
+├── 06_buffer_operations.sql       ✓ Complete
+├── 07_spatial_joins.sql          ✓ Complete
+└── 08_complex_analysis.sql       ✓ Complete
+```
 
 ### Grading Breakdown (20 points total)
 
-| Component | Points | Requirements |
-|-----------|--------|-------------|
-| **Function 1:** `connect_to_postgis()` | 5 | Successfully connects to PostGIS and verifies extensions |
-| **Function 2:** `load_spatial_data()` | 5 | Loads data with proper spatial types and indexes |
-| **Function 3:** `analyze_spatial_relationships()` | 5 | Executes spatial queries and returns correct results |
-| **Function 4:** `export_analysis_results()` | 5 | Exports data to multiple formats with validation |
+| Query | Description | Points | Key Skills |
+|-------|-------------|---------|------------|
+| 1 | Spatial Inspection | 2.5 | PostGIS metadata functions |
+| 2 | Geometry Creation | 2.5 | Constructing spatial objects |
+| 3 | Spatial Measurements | 2.5 | Distance, area, length calculations |
+| 4 | Coordinate Transformation | 2.5 | CRS conversion and projection |
+| 5 | Spatial Relationships | 2.5 | Topology and proximity queries |
+| 6 | Buffer Operations | 2.5 | Zone analysis and spatial buffering |
+| 7 | Spatial Joins | 2.5 | Multi-table spatial analysis |
+| 8 | Complex Analysis | 2.5 | Advanced workflows and CTEs |
 
-### Success Checklist
+### Submission Process
 
-- [ ] **Database Connection:** Can connect to PostGIS without errors
-- [ ] **Data Loading:** Successfully imports both CSV and GeoJSON data  
-- [ ] **Spatial Queries:** Executes spatial analysis functions correctly
-- [ ] **Data Export:** Creates valid output files in specified formats
-- [ ] **Tests Passing:** All automated tests complete successfully
-- [ ] **Code Quality:** Functions include proper error handling and documentation
-- [ ] **Docker Environment:** Database starts and runs consistently
+1. **Complete all templates** (remove all `_____` placeholders)
+2. **Test locally** using `python test_assignment.py -v`
+3. **Generate grade report** using `python grading/calculate_grade.py`
+4. **Commit and push** your completed SQL files
+5. **Verify CI/CD** passes all automated tests in GitHub Actions
 
----
+## 🔧 PostGIS Quick Reference
 
-## 🎓 Why This Matters for GIS
+### Basic Spatial Functions
 
-### When to Use Spatial Databases vs. Files
+```sql
+-- Geometry inspection
+ST_GeometryType(geom)    -- Returns geometry type (ST_Point, ST_Polygon, etc.)
+ST_SRID(geom)           -- Returns spatial reference system ID
+ST_AsText(geom)         -- Returns WKT representation
 
-**✅ Use PostGIS When You Need:**
-- **Multi-user editing:** Teams working on the same datasets
-- **Complex analysis:** Advanced spatial operations with SQL
-- **Large datasets:** Millions of features with fast query performance  
-- **Data integrity:** Validation rules and transaction safety
-- **Web applications:** Backend data for mapping applications
-- **Enterprise integration:** Connection to business systems and workflows
+-- Geometry creation
+ST_MakePoint(x, y)      -- Create point from coordinates
+ST_GeomFromText(wkt, srid) -- Create geometry from WKT string
+ST_SetSRID(geom, srid)  -- Assign SRID to geometry
 
-**📄 Use Files When You Have:**
-- **Simple projects:** Basic desktop GIS workflows
-- **Small datasets:** Under 100MB of spatial data
-- **Single user:** Individual analysis projects
-- **Visualization focus:** Primary goal is making maps
+-- Measurements
+ST_Distance_Sphere(geom1, geom2)  -- Geographic distance in meters
+ST_Area(geom)           -- Area in square units of SRID
+ST_Length(geom)         -- Length in linear units of SRID
 
-### Real-World Applications
+-- Coordinate transformation
+ST_Transform(geom, srid) -- Transform to different coordinate system
+ST_X(geom), ST_Y(geom)  -- Extract coordinate components
+```
 
-**Urban Planning:** Query all properties within 500m of proposed transit stations
-**Environmental Analysis:** Find endangered species habitats intersecting development zones  
-**Emergency Management:** Identify evacuation routes avoiding flood-prone areas
-**Asset Management:** Track infrastructure assets with spatial and temporal queries
-**Business Intelligence:** Analyze customer locations relative to service territories
+### Common Coordinate Systems
 
----
+```sql
+-- Geographic coordinate systems (degrees)
+EPSG:4326  -- WGS84 (Global GPS standard)
 
-## 🆘 Getting Help
+-- Projected coordinate systems (meters)
+EPSG:32610 -- UTM Zone 10N (US West Coast: WA, OR, CA)
+EPSG:32611 -- UTM Zone 11N (US West: CA, NV)
+EPSG:32613 -- UTM Zone 13N (US Central: CO, WY, MT)
+EPSG:32614 -- UTM Zone 14N (US Central: TX, OK, KS)
+```
 
-### During Development
-- **Read error messages carefully** - PostgreSQL provides detailed error information
-- **Test database connections manually** using the Docker commands provided
-- **Use the learning notebook** for interactive exploration of PostGIS concepts
-- **Check PostGIS documentation** for function syntax and examples
+### Spatial Relationships
 
-### If You're Stuck
-- **Office Hours:** Bring specific error messages and your attempted solutions
-- **Discussion Forum:** Share challenges with classmates (but not solution code)  
-- **Debugging Steps:** Work through the troubleshooting section systematically
-- **Professional Practice:** Learning to debug database issues is a valuable career skill
+```sql
+-- Containment
+ST_Within(geom1, geom2)    -- geom1 completely inside geom2
+ST_Contains(geom1, geom2)  -- geom1 completely contains geom2
 
----
+-- Intersection
+ST_Intersects(geom1, geom2) -- geometries share any space
+ST_Crosses(geom1, geom2)    -- geometries cross each other
 
-**🎯 Remember: This assignment builds the foundation for enterprise-level GIS workflows. The database skills you learn here will serve you throughout your career in positions requiring scalable, multi-user geospatial data management.**
+-- Proximity
+ST_DWithin(geom1, geom2, distance) -- within specified distance
+ST_Distance(geom1, geom2)           -- distance between geometries
+```
 
-*Focus on understanding the concepts and patterns - these techniques will apply to any spatial database system you encounter in your professional work.*
+### Spatial Analysis Operations
+
+```sql
+-- Buffers
+ST_Buffer(geom, radius)     -- Create buffer zone
+ST_Buffer(geom, radius, segments) -- Buffer with segment control
+
+-- Overlay operations  
+ST_Intersection(geom1, geom2) -- Common area of two geometries
+ST_Union(geom1, geom2)        -- Combined area of geometries
+ST_Difference(geom1, geom2)   -- geom1 minus geom2
+
+-- Aggregation
+ST_Union(geom_column)         -- Combine multiple geometries
+ST_Collect(geom_column)       -- Collect geometries into collection
+```
+
+## 🔧 Troubleshooting
+
+### Common PostGIS Errors
+
+**Error: `ERROR: function st_distance_sphere(geometry, geometry) does not exist`**
+- **Solution:** Use `ST_Distance_Sphere()` with correct capitalization
+- **Note:** PostGIS functions are case-sensitive
+
+**Error: `ERROR: transform: couldn't project point`**
+- **Solution:** Check EPSG codes are valid and appropriate for your data region
+- **Common UTM Zones:** 32610 (West Coast), 32613 (Colorado), 32614 (Texas)
+
+**Error: `ERROR: geometry contains non-closed rings`**
+- **Solution:** Ensure polygon WKT strings close properly (first point = last point)
+- **Example:** `POLYGON((x1 y1, x2 y2, x3 y3, x1 y1))`
+
+**Error: Query returns no results unexpectedly**
+- **Check SRID consistency:** All geometries must have same SRID for spatial operations
+- **Check coordinate order:** PostGIS uses (longitude, latitude) not (latitude, longitude)
+- **Verify data extent:** Use `ST_Extent(geom)` to check geometry bounds
+
+### Performance Optimization
+
+**Slow spatial queries:**
+```sql
+-- Check if spatial indexes exist
+SELECT schemaname, tablename, indexname 
+FROM pg_indexes 
+WHERE indexname LIKE '%geom%';
+
+-- Create spatial index if missing
+CREATE INDEX idx_cities_geom ON cities USING GIST (geom);
+```
+
+**Improve measurement accuracy:**
+```sql
+-- Always transform to appropriate UTM zone for meter-based calculations
+-- Example: West Coast data
+ST_Area(ST_Transform(geom, 32610))  -- Good
+ST_Area(geom)                       -- Less accurate for WGS84 data
+```
+
+### Docker and Database Issues
+
+**Container won't start:**
+```bash
+# Check container status
+docker-compose ps
+
+# View container logs  
+docker-compose logs postgres
+
+# Restart services
+docker-compose down && docker-compose up -d
+```
+
+**Database connection issues:**
+```bash
+# Verify PostGIS is listening on correct port
+docker port postgis-basics-postgres
+
+# Test connection manually
+docker exec -it postgis-basics-postgres psql -U postgres -d gis_fundamentals -c "SELECT version();"
+```
+
+**Data not loading:**
+```bash
+# Check if data initialization script ran
+docker exec -it postgis-basics-postgres psql -U postgres -d gis_fundamentals -c "SELECT count(*) FROM cities;"
+
+# Manually reload data if needed
+docker exec -i postgis-basics-postgres psql -U postgres -d gis_fundamentals < data/load_spatial_data.sql
+```
+
+## 📚 Learning Resources
+
+### Essential PostGIS Documentation
+
+- **[PostGIS Manual](https://postgis.net/docs/)** - Complete function reference
+- **[PostGIS Tutorial](https://postgis.net/workshops/postgis-intro/)** - Hands-on workshop
+- **[Spatial Reference Systems](https://spatialreference.org/)** - EPSG code database
+- **[PostGIS FAQ](https://postgis.net/docs/PostGIS_FAQ.html)** - Common questions and solutions
+
+### Key PostGIS Functions You'll Master
+
+**Geometry Constructors:**
+- `ST_MakePoint()` - Point creation
+- `ST_GeomFromText()` - WKT parsing  
+- `ST_Buffer()` - Buffer creation
+- `ST_Centroid()` - Geometry center
+
+**Spatial Analysis:**
+- `ST_Distance_Sphere()` - Accurate geographic distance
+- `ST_Area()` - Area calculation
+- `ST_Length()` - Linear measurement
+- `ST_Intersection()` - Geometric intersection
+
+**Coordinate Systems:**
+- `ST_Transform()` - CRS transformation
+- `ST_SRID()` - Get spatial reference
+- `ST_SetSRID()` - Set spatial reference
+
+**Spatial Relationships:**
+- `ST_Within()` - Containment testing
+- `ST_Intersects()` - Intersection testing
+- `ST_DWithin()` - Proximity testing
+
+### Coordinate Reference Systems Guide
+
+**When to Use Geographic (WGS84, EPSG:4326):**
+- ✓ Data storage and exchange
+- ✓ Web mapping applications  
+- ✓ Global datasets
+- ✗ Accurate distance/area calculations
+
+**When to Use Projected (UTM zones):**
+- ✓ Accurate measurements (distance, area, buffer)
+- ✓ Engineering and surveying applications
+- ✓ Local analysis and mapping
+- ✗ Global datasets spanning multiple zones
+
+**UTM Zone Selection:**
+```sql
+-- US West Coast: Washington, Oregon, Northern California
+EPSG:32610  -- UTM Zone 10N
+
+-- California Central Valley, Nevada  
+EPSG:32611  -- UTM Zone 11N
+
+-- Colorado, Wyoming, Montana, New Mexico
+EPSG:32613  -- UTM Zone 13N
+
+-- Texas, Oklahoma, Kansas, Nebraska
+EPSG:32614  -- UTM Zone 14N
+```
+
+## 🎯 Success Criteria
+
+### Template Completion (Required)
+- [ ] All `_____` placeholders replaced with valid PostGIS functions
+- [ ] All SQL files execute without syntax errors
+- [ ] All queries return expected result structure
+
+### Spatial Accuracy (Quality Indicators)
+- [ ] Coordinate systems properly specified (EPSG codes)
+- [ ] Measurements use appropriate projections for accuracy
+- [ ] Spatial relationships use correct topology functions
+- [ ] Complex analysis follows logical workflow patterns
+
+### Professional Best Practices
+- [ ] Queries follow consistent formatting and style
+- [ ] Comments explain complex spatial logic
+- [ ] Efficient use of spatial

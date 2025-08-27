@@ -1,0 +1,485 @@
+name: PostGIS Fundamentals - Automated Testing and Grading
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: # Allow manual runs
+
+jobs:
+  test-and-grade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # PostgreSQL service with PostGIS for testing
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_PASSWORD: gis604b
+          POSTGRES_USER: gis_student
+          POSTGRES_DB: gis_analysis
+        options: >-
+          --health-cmd "pg_isready -U gis_student -d gis_analysis"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 30s
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: 📦 Install UV Package Manager
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: 🔧 Install System Dependencies
+        run: |
+          echo "🔧 Installing system dependencies for PostGIS..."
+          sudo apt-get update
+          sudo apt-get install -y \
+            postgresql-client \
+            libpq-dev \
+            gdal-bin \
+            libgdal-dev \
+            libspatialindex-dev
+          echo "✅ System dependencies installed"
+
+      - name: 📦 Install Python Dependencies
+        run: |
+          echo "📦 Installing Python dependencies with UV..."
+          # Install core dependencies and test tools
+          uv sync --group test --group dev
+          echo "✅ Dependencies installed successfully"
+
+      - name: 🔒 Verify Dependency Lock File
+        run: |
+          echo "🔒 Checking uv.lock for reproducible builds..."
+          if [ -f "uv.lock" ]; then
+            echo "✅ uv.lock found - verifying dependencies"
+            uv lock --check
+            echo "✅ Dependencies are properly locked and up-to-date"
+          else
+            echo "⚠️  uv.lock not found - dependencies may not be reproducible"
+            echo "💡 This is acceptable for initial development"
+          fi
+
+      - name: 🗄️ Wait for PostgreSQL and Verify PostGIS
+        run: |
+          echo "🗄️ Waiting for PostgreSQL with PostGIS to be ready..."
+
+          # Wait for database to accept connections
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U gis_student -d gis_analysis; then
+              echo "✅ PostgreSQL is accepting connections"
+              break
+            fi
+            echo "⏳ Waiting for PostgreSQL... attempt $i/30"
+            sleep 2
+          done
+
+          # Verify PostGIS extension is available
+          echo "🌍 Verifying PostGIS extension..."
+          PGPASSWORD=gis604b psql -h localhost -p 5432 -U gis_student -d gis_analysis -c "SELECT PostGIS_Version();" || {
+            echo "❌ PostGIS extension not available"
+            exit 1
+          }
+
+          echo "✅ PostGIS database is ready for testing"
+
+      - name: 🔍 Verify Project Structure
+        run: |
+          echo "🔍 Checking PostGIS assignment project structure..."
+          echo "Current directory contents:"
+          ls -la
+
+          echo -e "\n📁 Source directory:"
+          if [ -d "src" ]; then
+            ls -la src/
+            echo "✅ Source directory found"
+          else
+            echo "❌ No src/ directory found"
+            exit 1
+          fi
+
+          echo -e "\n🧪 Tests directory:"
+          if [ -d "tests" ]; then
+            ls -la tests/
+            echo "✅ Tests directory found"
+          else
+            echo "❌ No tests/ directory found"
+            exit 1
+          fi
+
+          echo -e "\n📊 Data directory:"
+          if [ -d "data" ]; then
+            ls -la data/
+            echo "✅ Sample data files available"
+          else
+            echo "⚠️  No data/ directory found - some tests may use generated data"
+          fi
+
+      - name: 🔧 Verify PostGIS Function Imports
+        run: |
+          echo "🔧 Testing PostGIS function imports..."
+          uv run python -c "
+          import sys
+          import os
+          sys.path.insert(0, 'src')
+
+          try:
+              from postgis_basics import (
+                  connect_to_postgis,
+                  load_spatial_data,
+                  analyze_spatial_relationships,
+                  export_analysis_results
+              )
+              print('✅ All PostGIS functions imported successfully!')
+              print('✅ Functions found:')
+              print('  🔌 connect_to_postgis - Database connectivity')
+              print('  📊 load_spatial_data - Spatial data loading')
+              print('  🔍 analyze_spatial_relationships - Spatial analysis')
+              print('  💾 export_analysis_results - Data export')
+
+          except ImportError as e:
+              print(f'❌ Import Error: {e}')
+              print('❌ Make sure all 4 functions are defined in src/postgis_basics.py')
+              sys.exit(1)
+
+          except Exception as e:
+              print(f'❌ Error: {e}')
+              print('❌ Check for syntax errors in your code')
+              sys.exit(1)
+          "
+
+      - name: 🌍 Test Database Connection
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: gis_analysis
+          POSTGRES_USER: gis_student
+          POSTGRES_PASSWORD: gis604b
+        run: |
+          echo "🌍 Testing database connection from Python..."
+          uv run python -c "
+          import sys
+          sys.path.insert(0, 'src')
+
+          try:
+              import psycopg2
+
+              # Test basic connection
+              conn = psycopg2.connect(
+                  host='localhost',
+                  port=5432,
+                  database='gis_analysis',
+                  user='gis_student',
+                  password='gis604b'
+              )
+
+              cursor = conn.cursor()
+              cursor.execute('SELECT version();')
+              version = cursor.fetchone()
+              print(f'✅ PostgreSQL connection successful: {version[0][:50]}...')
+
+              cursor.execute('SELECT PostGIS_Version();')
+              postgis_version = cursor.fetchone()
+              print(f'✅ PostGIS extension available: {postgis_version[0]}')
+
+              cursor.close()
+              conn.close()
+              print('✅ Database connectivity test passed')
+
+          except Exception as e:
+              print(f'❌ Database connection failed: {e}')
+              print('💡 This may indicate issues with the student code')
+          "
+
+      - name: 🧪 Run PostGIS Unit Tests
+        id: pytest
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: gis_analysis
+          POSTGRES_USER: gis_student
+          POSTGRES_PASSWORD: gis604b
+        run: |
+          echo "🧪 Running PostGIS unit tests with database..."
+
+          # Run pytest with detailed output and database connectivity
+          uv run pytest tests/ \
+            --verbose \
+            --tb=short \
+            --color=yes \
+            --junit-xml=test-results.xml \
+            --html=test-report.html \
+            --self-contained-html \
+            --cov=src \
+            --cov-report=term \
+            --cov-report=html \
+            --cov-report=xml \
+            -m "not slow" \
+          || echo "TESTS_FAILED=true" >> $GITHUB_ENV
+
+      - name: 📊 Calculate Grade
+        id: grade
+        run: |
+          echo "📊 Calculating grade for PostGIS assignment..."
+
+          # Check if custom grading script exists, otherwise use basic calculation
+          if [ -f ".github/scripts/calculate_grade.py" ]; then
+            echo "Using custom grading script..."
+            uv run python .github/scripts/calculate_grade.py --results test-results.xml --output grade-report.json
+          else
+            echo "Using basic test result analysis..."
+            uv run python -c "
+            import xml.etree.ElementTree as ET
+            import json
+            import os
+
+            try:
+                # Parse test results
+                tree = ET.parse('test-results.xml')
+                root = tree.getroot()
+
+                tests_run = int(root.get('tests', 0))
+                failures = int(root.get('failures', 0))
+                errors = int(root.get('errors', 0))
+                tests_passed = tests_run - failures - errors
+
+                # Calculate grade (20 points total)
+                if tests_run == 0:
+                    percentage = 0
+                    letter_grade = 'F'
+                    points = 0
+                else:
+                    percentage = (tests_passed / tests_run) * 100
+                    points = round((tests_passed / tests_run) * 20, 1)
+
+                    if percentage >= 90:
+                        letter_grade = 'A'
+                    elif percentage >= 80:
+                        letter_grade = 'B'
+                    elif percentage >= 70:
+                        letter_grade = 'C'
+                    elif percentage >= 60:
+                        letter_grade = 'D'
+                    else:
+                        letter_grade = 'F'
+
+                # Save grade report
+                grade_report = {
+                    'total_points': 20,
+                    'earned_points': points,
+                    'percentage': percentage,
+                    'letter_grade': letter_grade,
+                    'tests_total': tests_run,
+                    'tests_passed': tests_passed,
+                    'tests_failed': failures + errors
+                }
+
+                with open('grade-report.json', 'w') as f:
+                    json.dump(grade_report, f, indent=2)
+
+                print(f'Grade calculated: {letter_grade} ({percentage:.1f}%)')
+
+            except Exception as e:
+                print(f'Error calculating grade: {e}')
+                # Create minimal report
+                grade_report = {
+                    'total_points': 20,
+                    'earned_points': 0,
+                    'percentage': 0,
+                    'letter_grade': 'F',
+                    'tests_total': 0,
+                    'tests_passed': 0,
+                    'tests_failed': 0
+                }
+                with open('grade-report.json', 'w') as f:
+                    json.dump(grade_report, f, indent=2)
+            "
+
+      - name: 📋 Load Grade Results
+        if: always()
+        run: |
+          echo "📋 Loading grade results for workflow summary..."
+          if [ -f "grade-report.json" ]; then
+            # Extract grade info from JSON
+            uv run python -c "
+            import json
+            import os
+
+            try:
+                with open('grade-report.json', 'r') as f:
+                    grade_data = json.load(f)
+
+                # Set environment variables for GitHub Actions
+                env_file = os.environ.get('GITHUB_ENV', '')
+                if env_file:
+                    with open(env_file, 'a') as f:
+                        f.write(f\"LETTER_GRADE={grade_data.get('letter_grade', 'F')}\n\")
+                        f.write(f\"GRADE_PERCENTAGE={grade_data.get('percentage', 0):.1f}\n\")
+                        f.write(f\"POINTS={grade_data.get('earned_points', 0)}\n\")
+                        f.write(f\"TESTS_PASSED={grade_data.get('tests_passed', 0)}\n\")
+                        f.write(f\"TESTS_TOTAL={grade_data.get('tests_total', 0)}\n\")
+
+                        # Set test failure flag if needed
+                        if grade_data.get('tests_total', 0) > grade_data.get('tests_passed', 0):
+                            f.write('TESTS_FAILED=true\n')
+
+                print('✅ Grade information loaded successfully')
+            except Exception as e:
+                print(f'❌ Error loading grade results: {e}')
+                # Set default values
+                env_file = os.environ.get('GITHUB_ENV', '')
+                if env_file:
+                    with open(env_file, 'a') as f:
+                        f.write('LETTER_GRADE=F\n')
+                        f.write('GRADE_PERCENTAGE=0.0\n')
+                        f.write('POINTS=0\n')
+                        f.write('TESTS_PASSED=0\n')
+                        f.write('TESTS_TOTAL=0\n')
+                        f.write('TESTS_FAILED=true\n')
+            "
+          else
+            echo "⚠️  No grade report found - using basic test results"
+            echo "LETTER_GRADE=F" >> $GITHUB_ENV
+            echo "GRADE_PERCENTAGE=0.0" >> $GITHUB_ENV
+            echo "POINTS=0" >> $GITHUB_ENV
+          fi
+
+      - name: 📋 Generate Summary Report
+        if: always()
+        run: |
+          echo "📋 POSTGIS FUNDAMENTALS ASSIGNMENT SUMMARY" >> $GITHUB_STEP_SUMMARY
+          echo "===========================================" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "$GRADE_PERCENTAGE" ]; then
+            echo "🎯 **Final Grade: $LETTER_GRADE ($GRADE_PERCENTAGE%)**" >> $GITHUB_STEP_SUMMARY
+            echo "📊 **Points Earned: $POINTS/20**" >> $GITHUB_STEP_SUMMARY
+            echo "🧪 **Tests Passed: $TESTS_PASSED/$TESTS_TOTAL**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Add status message
+          if [ "$TESTS_FAILED" = "true" ]; then
+            echo "❌ **Status: Some tests failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔧 Next Steps:" >> $GITHUB_STEP_SUMMARY
+            echo "1. **Check Database Connection**: Ensure your \`connect_to_postgis()\` function works" >> $GITHUB_STEP_SUMMARY
+            echo "2. **Review Test Output**: Look for specific error messages in the test results above" >> $GITHUB_STEP_SUMMARY
+            echo "3. **Test Locally**: Run \`docker-compose up -d\` then \`pytest tests/ -v\`" >> $GITHUB_STEP_SUMMARY
+            echo "4. **Debug SQL Queries**: Check your spatial queries in pgAdmin or psql" >> $GITHUB_STEP_SUMMARY
+            echo "5. **Ask for Help**: Bring specific error messages to office hours" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Status: All tests passed!**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🎉 Congratulations!" >> $GITHUB_STEP_SUMMARY
+            echo "Your PostGIS assignment is working correctly and ready for submission." >> $GITHUB_STEP_SUMMARY
+            echo "You've demonstrated proficiency with spatial database operations!" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Function Requirements:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function 1** (\`connect_to_postgis\`): Database connection with PostGIS verification" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function 2** (\`load_spatial_data\`): Import CSV and GeoJSON data with spatial types" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function 3** (\`analyze_spatial_relationships\`): Execute spatial queries using PostGIS functions" >> $GITHUB_STEP_SUMMARY
+          echo "- **Function 4** (\`export_analysis_results\`): Export data in multiple formats with validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🛠️ Professional Skills Developed:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ PostGIS database connectivity and management" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Spatial data loading from multiple formats" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ SQL spatial query construction and optimization" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Multi-format data export for stakeholder delivery" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Enterprise-level spatial database workflows" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Database testing and continuous integration practices" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📎 Upload Test Results and Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: postgis-test-results-${{ github.run_number }}
+          path: |
+            test-results.xml
+            test-report.html
+            htmlcov/
+            grade-report.json
+            coverage.xml
+          retention-days: 30
+
+      - name: 📊 Upload Coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: postgis-tests
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: ✅ Assignment Status Summary
+        if: always()
+        run: |
+          echo "=============================================="
+          echo "🌍 GIST 604B - POSTGIS FUNDAMENTALS ASSIGNMENT"
+          echo "=============================================="
+
+          if [ -n "$GRADE_PERCENTAGE" ]; then
+            echo "📊 FINAL GRADE: $LETTER_GRADE ($GRADE_PERCENTAGE%)"
+            echo "🎯 POINTS: $POINTS/20"
+            echo "🧪 TESTS: $TESTS_PASSED/$TESTS_TOTAL passed"
+
+            if [ "$LETTER_GRADE" = "A" ] || [ "$LETTER_GRADE" = "B" ]; then
+              echo ""
+              echo "🎉 EXCELLENT WORK! Your PostGIS assignment demonstrates:"
+              echo "   ✅ Strong spatial database connectivity skills"
+              echo "   ✅ Proper spatial data handling and loading"
+              echo "   ✅ Effective use of PostGIS spatial functions"
+              echo "   ✅ Professional data export capabilities"
+              echo "📤 Ready for instructor review and real-world application!"
+
+            elif [ "$LETTER_GRADE" = "C" ]; then
+              echo ""
+              echo "👍 GOOD PROGRESS! You have solid foundations with room for improvement:"
+              echo "   🔍 Review failing tests for specific areas to strengthen"
+              echo "   📚 Consider additional practice with spatial SQL queries"
+              echo "   💪 You're on the right track - keep building your skills!"
+
+            else
+              echo ""
+              echo "🔧 NEEDS DEVELOPMENT - Focus Areas:"
+              echo "   🔌 Database connectivity and PostGIS setup"
+              echo "   📊 Spatial data loading and type handling"
+              echo "   🔍 PostGIS spatial function usage"
+              echo "   💾 Data export and validation processes"
+              echo "   📚 Review PostGIS documentation and examples"
+              echo "   🤝 Consider office hours for targeted help"
+            fi
+          else
+            echo "❌ GRADING SYSTEM ERROR - Check test execution logs above"
+          fi
+
+          echo ""
+          echo "=============================================="
+          echo "🎓 SPATIAL DATABASE SKILLS DEVELOPED:"
+          echo "   🗄️  Enterprise database management"
+          echo "   🌍 PostGIS spatial extension usage"
+          echo "   📊 Multi-format spatial data integration"
+          echo "   🔍 Advanced spatial analysis with SQL"
+          echo "   💾 Professional data export workflows"
+          echo "   🧪 Database testing and CI/CD practices"
+          echo "=============================================="
+          echo "💡 Remember: These skills prepare you for roles requiring"
+          echo "   enterprise-scale GIS data management and analysis!"
+          echo "🤝 Questions? Bring specific test failures to office hours."
+          echo "=============================================="
