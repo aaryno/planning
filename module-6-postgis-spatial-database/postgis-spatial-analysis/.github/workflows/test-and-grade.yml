@@ -1,0 +1,324 @@
+name: 🗄️ PostGIS Spatial Analysis Assignment - Automated Testing & Grading
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  test-postgis-spatial-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgis/postgis:15-3.3
+        env:
+          POSTGRES_DB: spatial_analysis
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d spatial_analysis"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+          --health-start-period=30s
+
+    env:
+      DB_HOST: localhost
+      DB_NAME: spatial_analysis
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_PORT: 5432
+      PYTHONPATH: ${{ github.workspace }}
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 📦 Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install psycopg2-binary pytest pytest-json-report
+
+      - name: 🗄️ Verify PostGIS Installation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          echo "Waiting for PostGIS database to be ready..."
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U postgres -d spatial_analysis; then
+              echo "Database is ready!"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+          echo "Testing PostGIS extension..."
+          psql -h localhost -U postgres -d spatial_analysis -c "SELECT PostGIS_Version();"
+
+      - name: 📊 Load Spatial Analysis Dataset
+        run: |
+          echo "Loading comprehensive spatial dataset..."
+          psql -h localhost -U postgres -d spatial_analysis -f data/load_sample_data.sql
+
+          echo "Verifying spatial data loading..."
+          psql -h localhost -U postgres -d spatial_analysis -c "
+            SELECT 'Data Loading Summary' as info;
+            SELECT 'protected_areas' as table_name, COUNT(*) as records FROM protected_areas
+            UNION ALL SELECT 'watersheds', COUNT(*) FROM watersheds
+            UNION ALL SELECT 'transportation_network', COUNT(*) FROM transportation_network
+            UNION ALL SELECT 'facilities', COUNT(*) FROM facilities
+            UNION ALL SELECT 'monitoring_stations', COUNT(*) FROM monitoring_stations
+            UNION ALL SELECT 'land_use_zones', COUNT(*) FROM land_use_zones;
+          "
+
+      - name: 🗂️ Validate SQL Query Files
+        run: |
+          echo "Checking for required SQL files..."
+          required_files=(
+            "sql/01_multi_layer_intersection.sql"
+            "sql/02_advanced_buffer_analysis.sql"
+            "sql/03_network_routing_analysis.sql"
+            "sql/04_multi_criteria_decision_analysis.sql"
+          )
+
+          missing_files=0
+          for file in "${required_files[@]}"; do
+            if [[ -f "$file" ]]; then
+              echo "✅ Found: $file"
+              # Check if file contains TODO items or blanks
+              if grep -q "____\|TODO" "$file"; then
+                echo "⚠️  Warning: $file contains unfinished work (TODO items or blanks)"
+              else
+                echo "✅ $file appears complete"
+              fi
+            else
+              echo "❌ Missing: $file"
+              ((missing_files++))
+            fi
+          done
+
+          if [[ $missing_files -gt 0 ]]; then
+            echo "❌ $missing_files required SQL files are missing!"
+            exit 1
+          else
+            echo "✅ All required SQL files found"
+          fi
+
+      - name: 🧪 Run PostGIS Spatial Analysis Tests
+        id: run_tests
+        run: |
+          echo "Running comprehensive spatial analysis test suite..."
+          python test_assignment.py -v --tb=short 2>&1 | tee test_output.log
+
+          # Capture test results for later steps
+          if python test_assignment.py -v --tb=short; then
+            echo "tests_passed=true" >> $GITHUB_OUTPUT
+            echo "✅ All tests passed successfully!"
+          else
+            echo "tests_passed=false" >> $GITHUB_OUTPUT
+            echo "❌ Some tests failed - check results for details"
+          fi
+
+      - name: 📊 Calculate Final Grade
+        id: calculate_grade
+        run: |
+          echo "Calculating assignment grade using professional grading engine..."
+          python grading/calculate_grade.py --verbose --json-output grade-report.json
+
+          # Extract key metrics from grade report for GitHub outputs
+          if [[ -f grade-report.json ]]; then
+            TOTAL_POINTS=$(python -c "import json; print(json.load(open('grade-report.json'))['total_points'])")
+            POSSIBLE_POINTS=$(python -c "import json; print(json.load(open('grade-report.json'))['possible_points'])")
+            PERCENTAGE=$(python -c "import json; print(json.load(open('grade-report.json'))['percentage'])")
+            LETTER_GRADE=$(python -c "import json; print(json.load(open('grade-report.json'))['letter_grade'])")
+
+            echo "TOTAL_POINTS=$TOTAL_POINTS" >> $GITHUB_ENV
+            echo "POSSIBLE_POINTS=$POSSIBLE_POINTS" >> $GITHUB_ENV
+            echo "PERCENTAGE=$PERCENTAGE" >> $GITHUB_ENV
+            echo "LETTER_GRADE=$LETTER_GRADE" >> $GITHUB_ENV
+
+            echo "total_points=$TOTAL_POINTS" >> $GITHUB_OUTPUT
+            echo "possible_points=$POSSIBLE_POINTS" >> $GITHUB_OUTPUT
+            echo "percentage=$PERCENTAGE" >> $GITHUB_OUTPUT
+            echo "letter_grade=$LETTER_GRADE" >> $GITHUB_OUTPUT
+
+            echo "📊 Grade Summary:"
+            echo "   Score: $TOTAL_POINTS/$POSSIBLE_POINTS points ($PERCENTAGE%)"
+            echo "   Letter Grade: $LETTER_GRADE"
+          else
+            echo "❌ Grade report not generated - setting default values"
+            echo "TOTAL_POINTS=0" >> $GITHUB_ENV
+            echo "POSSIBLE_POINTS=20" >> $GITHUB_ENV
+            echo "PERCENTAGE=0" >> $GITHUB_ENV
+            echo "LETTER_GRADE=F" >> $GITHUB_ENV
+          fi
+
+      - name: 📝 Generate Grade Summary Report
+        run: |
+          echo "Generating comprehensive grade summary..."
+          cat > grade-summary.md << 'EOF'
+          # 🏔️ PostGIS Spatial Analysis Assignment - Grade Report
+
+          ## 📊 Overall Performance
+
+          | Metric | Value |
+          |--------|-------|
+          | **Total Points** | ${{ env.TOTAL_POINTS }}/${{ env.POSSIBLE_POINTS }} |
+          | **Percentage** | ${{ env.PERCENTAGE }}% |
+          | **Letter Grade** | **${{ env.LETTER_GRADE }}** |
+          | **Assignment Type** | Application Level (Advanced Spatial Analysis) |
+
+          ## 📋 Query Breakdown (5 points each)
+
+          | Query | Description | Status |
+          |-------|-------------|--------|
+          | **Query 1** | Multi-Layer Spatial Intersection Analysis | ${{ steps.run_tests.outputs.tests_passed == 'true' && '✅ Passed' || '❌ Needs Work' }} |
+          | **Query 2** | Advanced Buffer Analysis & Facility Accessibility | ${{ steps.run_tests.outputs.tests_passed == 'true' && '✅ Passed' || '❌ Needs Work' }} |
+          | **Query 3** | Network Routing Analysis & Transportation Optimization | ${{ steps.run_tests.outputs.tests_passed == 'true' && '✅ Passed' || '❌ Needs Work' }} |
+          | **Query 4** | Multi-Criteria Spatial Decision Support Analysis | ${{ steps.run_tests.outputs.tests_passed == 'true' && '✅ Passed' || '❌ Needs Work' }} |
+
+          ## 🎯 Performance Analysis
+
+          ### Spatial Analysis Proficiency Level
+          ${{ env.PERCENTAGE >= '85' && '🌟 **Advanced** - Professional-level spatial analysis skills' || env.PERCENTAGE >= '70' && '👍 **Intermediate** - Good spatial analysis foundation' || '📚 **Developing** - Continue practicing spatial operations' }}
+
+          ### PostGIS Mastery
+          ${{ env.PERCENTAGE >= '80' && '✅ **Achieved** - Ready for complex spatial projects' || '📖 **In Progress** - Review PostGIS functions and workflows' }}
+
+          ### Ready for Advanced GIS Work
+          ${{ env.PERCENTAGE >= '75' && '🚀 **Yes** - Prepared for professional GIS development' || '🎯 **Almost** - Strengthen spatial analysis skills' }}
+
+          ## 💡 Next Steps
+
+          ${{ env.PERCENTAGE >= '85' && '- Explore enterprise spatial database optimization
+          - Consider advanced topics like spatial indexing and performance tuning
+          - Practice with larger, real-world spatial datasets' || env.PERCENTAGE >= '70' && '- Review any failed queries and understand the spatial concepts
+          - Practice with additional PostGIS function combinations
+          - Explore visualization of your spatial analysis results in QGIS' || '- Review PostGIS basics and fundamental spatial concepts
+          - Complete additional practice exercises with simpler spatial queries
+          - Focus on understanding coordinate systems and spatial relationships' }}
+
+          ## 📚 Professional Context
+
+          **Skills Demonstrated:**
+          - Multi-layer spatial intersection analysis for conservation planning
+          - Advanced buffer analysis for accessibility and service area modeling
+          - Network analysis fundamentals for transportation optimization
+          - Multi-criteria decision analysis for spatial planning applications
+
+          **Industry Applications:**
+          - Environmental impact assessment and conservation planning
+          - Emergency response facility siting and optimization
+          - Transportation network analysis and infrastructure planning
+          - Business location analysis and market research
+
+          ---
+
+          *Generated on $(date) by PostGIS Spatial Analysis Automated Grading System*
+          EOF
+
+      - name: 🔍 Database Performance Analysis
+        if: always()
+        run: |
+          echo "Analyzing spatial query performance and database statistics..."
+          psql -h localhost -U postgres -d spatial_analysis -c "
+            SELECT 'Database Performance Summary' as analysis;
+
+            -- Check spatial indexes
+            SELECT 'Spatial Indexes' as metric, COUNT(*) as count
+            FROM pg_indexes
+            WHERE indexname LIKE '%geom%' OR indexname LIKE '%gist%';
+
+            -- Table sizes
+            SELECT 'Table Sizes' as metric,
+                   schemaname, tablename,
+                   pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
+            FROM pg_tables
+            WHERE schemaname = 'public'
+            AND tablename IN ('protected_areas', 'watersheds', 'transportation_network',
+                             'facilities', 'monitoring_stations', 'land_use_zones');
+
+            -- PostGIS version info
+            SELECT 'PostGIS Version' as metric, PostGIS_Version() as version;
+          "
+
+      - name: 💾 Save Test Results and Artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: postgis-spatial-analysis-results-${{ github.run_number }}
+          path: |
+            grade-report.json
+            grade-summary.md
+            test_output.log
+          retention-days: 30
+
+      - name: 📋 Display Final Results Summary
+        if: always()
+        run: |
+          echo ""
+          echo "🏔️ ===== POSTGIS SPATIAL ANALYSIS ASSIGNMENT RESULTS ====="
+          echo ""
+          echo "📊 FINAL GRADE: ${{ env.TOTAL_POINTS }}/${{ env.POSSIBLE_POINTS }} points (${{ env.PERCENTAGE }}%) - Grade: ${{ env.LETTER_GRADE }}"
+          echo ""
+          echo "🧪 Test Status: ${{ steps.run_tests.outputs.tests_passed == 'true' && 'PASSED' || 'FAILED' }}"
+          echo ""
+          echo "📈 Performance Level:"
+          if (( $(echo "${{ env.PERCENTAGE }} >= 85" | bc -l) )); then
+            echo "   🌟 ADVANCED - Professional spatial analysis proficiency achieved!"
+          elif (( $(echo "${{ env.PERCENTAGE }} >= 70" | bc -l) )); then
+            echo "   👍 INTERMEDIATE - Good spatial analysis foundation established"
+          else
+            echo "   📚 DEVELOPING - Continue practicing PostGIS spatial operations"
+          fi
+          echo ""
+          echo "💼 Professional Readiness:"
+          if (( $(echo "${{ env.PERCENTAGE }} >= 75" | bc -l) )); then
+            echo "   ✅ Ready for professional GIS development projects"
+          else
+            echo "   🎯 Additional practice recommended before advanced projects"
+          fi
+          echo ""
+          echo "🗂️ Deliverables Generated:"
+          echo "   - Detailed grade report (grade-report.json)"
+          echo "   - Grade summary markdown (grade-summary.md)"
+          echo "   - Test execution log (test_output.log)"
+          echo ""
+          echo "=============================================================="
+
+      - name: ❌ Fail Workflow for Low Grades
+        if: env.PERCENTAGE < '60'
+        run: |
+          echo "❌ Assignment score (${{ env.PERCENTAGE }}%) is below passing threshold (60%)"
+          echo "Please review your spatial analysis queries and resubmit"
+          exit 1
+
+      - name: ✅ Success Summary
+        if: env.PERCENTAGE >= '60'
+        run: |
+          echo "🎉 Congratulations! Your PostGIS Spatial Analysis assignment has been completed successfully!"
+          echo "Grade: ${{ env.LETTER_GRADE }} (${{ env.PERCENTAGE }}%)"
+          echo ""
+          echo "🏆 You've demonstrated proficiency in:"
+          echo "   - Complex spatial intersection analysis"
+          echo "   - Advanced buffer operations and accessibility modeling"
+          echo "   - Network analysis and routing optimization concepts"
+          echo "   - Multi-criteria spatial decision support systems"
+          echo ""
+          echo "🚀 You're now prepared for professional-level spatial analysis projects!"
