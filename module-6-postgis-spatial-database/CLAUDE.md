@@ -63,7 +63,7 @@ directory:
 
 #### `sql-intro/` - Beginning level SQL
 **Status**: ✅ **Production Ready**  
-**Points**: 25 (5 functions × 5 points each)  
+**Points**: 20 (10 SQL queries × 2 points each)  
 **Complexity**: ⭐ Integration  
 **Time Investment**: 1-2 hours  
 
@@ -78,9 +78,9 @@ directory:
 
 #### `postgis-basics/` - PostGIS Database Fundamentals
 **Status**: ✅ **Production Ready**  
-**Points**: 20 (4 functions × 5 points each)  
+**Points**: 20 (10 SQL queries × 2 points each)  
 **Complexity**: ⭐⭐ Foundation  
-**Time Investment**: 3 hours  
+**Time Investment**: 2-3 hours  
 
 **Learning Objectives**:
 - Database connectivity and basic SQL operations
@@ -98,9 +98,9 @@ directory:
 
 #### `postgis-spatial-analysis/` - Advanced Spatial Operations
 **Status**: ✅ **Production Ready**  
-**Points**: 20 (4 functions × 5 points each)  
+**Points**: 20 (10 SQL queries × 3 points each)  
 **Complexity**: ⭐⭐⭐ Application  
-**Time Investment**: 3 hours  
+**Time Investment**: 3-4 hours  
 
 **Learning Objectives**:
 - Multi-dataset spatial analysis
@@ -186,20 +186,29 @@ assignment_name/
 
 ### Assignment Complexity Guidelines
 
-#### Foundation Level (20 points)
-- **Focus**: Core PostGIS functions and basic SQL
+#### Introductory Level: SQL Introduction (20 points)
+- **Focus**: Core PostgreSQL functions and basic SQL fundamentals
+- **Time**: 3-4 hours of focused work
+- **Outcome**: Students can write fundamental SQL queries and understand database concepts
+- **Preparation**: Essential foundation for all PostGIS spatial operations
+
+#### Foundation Level: PostGIS Basics (20 points)
+- **Focus**: Basic PostGIS spatial functions and coordinate systems
 - **Time**: 4-5 hours of focused work
-- **Outcome**: Students can perform basic spatial queries
+- **Outcome**: Students can perform basic spatial queries and data loading
+- **Skills**: ST_* functions, spatial data import/export, SRID transformations
 
-#### Application Level (20 points)
-- **Focus**: Multi-table analysis and complex spatial operations
+#### Application Level: PostGIS Spatial Analysis (20 points)
+- **Focus**: Multi-dataset spatial analysis and complex operations
 - **Time**: 5-6 hours of focused work
-- **Outcome**: Students can perform professional spatial analysis
+- **Outcome**: Students can perform professional spatial analysis workflows
+- **Skills**: Spatial joins, buffer analysis, advanced geometric operations
 
-#### Integration Level (25 points)
-- **Focus**: Enterprise-scale operations and optimization
+#### Integration Level: PostGIS Advanced Queries (25 points)
+- **Focus**: Enterprise-scale operations and performance optimization
 - **Time**: 6-8 hours of focused work
 - **Outcome**: Students can manage production spatial databases
+- **Skills**: Large dataset handling, query optimization, enterprise integration
 
 ---
 
@@ -227,23 +236,37 @@ class TestSpatialQuery:
 
 #### Test Categories by Assignment Type
 
-**Foundation Assignment Testing**:
-- Database connectivity validation
-- Basic spatial function correctness
-- Data loading verification
-- Simple query result validation
+**SQL Introduction Assignment Testing (sql-intro, 20 points)**:
+- SQL syntax validation and query execution
+- Basic SELECT, WHERE, and ORDER BY correctness
+- Aggregate functions and GROUP BY accuracy
+- JOIN operations and table relationship handling
+- Query result validation against expected outputs
+- Database connectivity and basic PostgreSQL operations
 
-**Application Assignment Testing**:
-- Complex spatial analysis accuracy
-- Multi-table join correctness
-- Spatial relationship verification
-- Result set completeness
+**PostGIS Basics Assignment Testing (postgis-basics, 20 points)**:
+- Database connectivity with PostGIS extensions
+- Basic spatial function correctness (ST_Area, ST_Distance, ST_Contains)
+- Spatial data loading and import verification
+- Coordinate system transformation accuracy
+- Simple spatial query result validation
+- Geometry creation and manipulation testing
 
-**Integration Assignment Testing**:
-- Large dataset query performance
-- Index utilization verification
-- Query plan optimization
-- Enterprise integration patterns
+**PostGIS Spatial Analysis Assignment Testing (postgis-spatial-analysis, 20 points)**:
+- Complex spatial analysis operation accuracy
+- Multi-dataset spatial join correctness
+- Buffer analysis and proximity operation verification
+- Spatial relationship testing (intersects, within, overlaps)
+- Multi-table spatial query result completeness
+- Advanced ST_* function combination validation
+
+**PostGIS Advanced Queries Assignment Testing (postgis-advanced-queries, 25 points)**:
+- Large dataset query performance benchmarking
+- Spatial index utilization verification
+- Query plan optimization and efficiency testing
+- Enterprise integration pattern validation
+- OpenStreetMap data processing accuracy
+- Production-scale spatial database operation testing
 
 ### Grading Automation Architecture
 

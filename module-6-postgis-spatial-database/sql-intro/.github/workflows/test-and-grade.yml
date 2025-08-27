@@ -1,0 +1,340 @@
+name: 🗄️ SQL Introduction Assignment Grading
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  test-sql-assignment:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: gis_intro
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 30s
+
+    env:
+      DB_HOST: localhost
+      DB_NAME: gis_intro
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_PORT: 5432
+
+    steps:
+      - name: 📥 Checkout Assignment Code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 📦 Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install psycopg2-binary pytest pytest-html pytest-json-report
+
+      - name: 🗄️ Wait for PostgreSQL to be Ready
+        run: |
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL to start..."
+            sleep 2
+          done
+          echo "✅ PostgreSQL is ready!"
+
+      - name: 📊 Load Sample Data into Database
+        run: |
+          # Create sample tables and data for SQL practice
+          PGPASSWORD=postgres psql -h localhost -U postgres -d gis_intro -c "
+            -- Create cities table
+            CREATE TABLE cities (
+                city_id SERIAL PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                state_code CHAR(2) NOT NULL,
+                population INTEGER NOT NULL,
+                latitude DECIMAL(10,7) NOT NULL,
+                longitude DECIMAL(10,7) NOT NULL,
+                elevation_ft INTEGER
+            );
+
+            -- Create state_info table
+            CREATE TABLE state_info (
+                state_code CHAR(2) PRIMARY KEY,
+                state_name VARCHAR(50) NOT NULL,
+                region VARCHAR(20) NOT NULL,
+                area_sq_miles INTEGER NOT NULL,
+                statehood_year INTEGER NOT NULL
+            );
+
+            -- Create weather_stations table
+            CREATE TABLE weather_stations (
+                station_id SERIAL PRIMARY KEY,
+                station_name VARCHAR(100) NOT NULL,
+                city_id INTEGER REFERENCES cities(city_id),
+                latitude DECIMAL(10,7) NOT NULL,
+                longitude DECIMAL(10,7) NOT NULL,
+                install_year INTEGER NOT NULL,
+                active BOOLEAN NOT NULL DEFAULT true
+            );
+
+            -- Create temperature_readings table
+            CREATE TABLE temperature_readings (
+                reading_id SERIAL PRIMARY KEY,
+                station_id INTEGER REFERENCES weather_stations(station_id),
+                reading_date DATE NOT NULL,
+                temp_high_f DECIMAL(5,2) NOT NULL,
+                temp_low_f DECIMAL(5,2) NOT NULL,
+                humidity_percent DECIMAL(5,2)
+            );
+          "
+
+      - name: 📊 Insert Sample Data
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d gis_intro -c "
+            -- Insert state information
+            INSERT INTO state_info (state_code, state_name, region, area_sq_miles, statehood_year) VALUES
+            ('CA', 'California', 'West', 163696, 1850),
+            ('TX', 'Texas', 'South', 268596, 1845),
+            ('NY', 'New York', 'Northeast', 54555, 1788),
+            ('FL', 'Florida', 'South', 65758, 1845),
+            ('IL', 'Illinois', 'Midwest', 57914, 1818),
+            ('PA', 'Pennsylvania', 'Northeast', 46054, 1787),
+            ('OH', 'Ohio', 'Midwest', 44826, 1803),
+            ('GA', 'Georgia', 'South', 59425, 1788),
+            ('NC', 'North Carolina', 'South', 53819, 1789),
+            ('MI', 'Michigan', 'Midwest', 96714, 1837);
+
+            -- Insert cities data
+            INSERT INTO cities (name, state_code, population, latitude, longitude, elevation_ft) VALUES
+            ('New York', 'NY', 8336817, 40.7128, -74.0060, 33),
+            ('Los Angeles', 'CA', 3979576, 34.0522, -118.2437, 285),
+            ('Chicago', 'IL', 2693976, 41.8781, -87.6298, 594),
+            ('Houston', 'TX', 2320268, 29.7604, -95.3698, 80),
+            ('Phoenix', 'AZ', 1680992, 33.4484, -112.0740, 1086),
+            ('Philadelphia', 'PA', 1584200, 39.9526, -75.1652, 39),
+            ('San Antonio', 'TX', 1547253, 29.4241, -98.4936, 650),
+            ('San Diego', 'CA', 1423851, 32.7157, -117.1611, 62),
+            ('Dallas', 'TX', 1343573, 32.7767, -96.7970, 430),
+            ('San Jose', 'CA', 1021795, 37.3382, -121.8863, 82),
+            ('Austin', 'TX', 978908, 30.2672, -97.7431, 489),
+            ('Jacksonville', 'FL', 911507, 30.3322, -81.6557, 16),
+            ('Fort Worth', 'TX', 918915, 32.7555, -97.3308, 653),
+            ('Columbus', 'OH', 898553, 39.9612, -82.9988, 760),
+            ('Charlotte', 'NC', 885708, 35.2271, -80.8431, 751),
+            ('San Francisco', 'CA', 881549, 37.7749, -122.4194, 52),
+            ('Indianapolis', 'IN', 876384, 39.7684, -86.1581, 718),
+            ('Seattle', 'WA', 753675, 47.6062, -122.3321, 173),
+            ('Denver', 'CO', 715522, 39.7392, -104.9903, 5280),
+            ('Washington', 'DC', 705749, 38.9072, -77.0369, 409),
+            ('Boston', 'MA', 694583, 42.3601, -71.0589, 141),
+            ('El Paso', 'TX', 695044, 31.7619, -106.4850, 3740),
+            ('Detroit', 'MI', 670031, 42.3314, -83.0458, 574),
+            ('Nashville', 'TN', 695144, 36.1627, -86.7816, 597),
+            ('Portland', 'OR', 652503, 45.5152, -122.6784, 173),
+            ('Memphis', 'TN', 633104, 35.1495, -90.0490, 337),
+            ('Oklahoma City', 'OK', 695044, 35.4676, -97.5164, 1201),
+            ('Las Vegas', 'NV', 648224, 36.1699, -115.1398, 2001),
+            ('Louisville', 'KY', 617638, 38.2527, -85.7585, 466),
+            ('Baltimore', 'MD', 576498, 39.2904, -76.6122, 146),
+            ('Milwaukee', 'WI', 577222, 43.0389, -87.9065, 594),
+            ('Albuquerque', 'NM', 560513, 35.0844, -106.6504, 5312),
+            ('Tucson', 'AZ', 548073, 32.2226, -110.9747, 2389),
+            ('Fresno', 'CA', 542107, 36.7378, -119.7871, 328),
+            ('Sacramento', 'CA', 513624, 38.5816, -121.4944, 30),
+            ('Kansas City', 'MO', 508090, 39.0997, -94.5786, 910),
+            ('Mesa', 'AZ', 504258, 33.4152, -111.8315, 1243),
+            ('Atlanta', 'GA', 498715, 33.7490, -84.3880, 1050),
+            ('Virginia Beach', 'VA', 459470, 36.8529, -75.9780, 12),
+            ('Omaha', 'NE', 486051, 41.2565, -95.9345, 1090),
+            ('Colorado Springs', 'CO', 478961, 38.8339, -104.8214, 6035),
+            ('Raleigh', 'NC', 474069, 35.7796, -78.6382, 315),
+            ('Miami', 'FL', 467963, 25.7617, -80.1918, 6),
+            ('Long Beach', 'CA', 466742, 33.7701, -118.1937, 170),
+            ('Virginia Beach', 'VA', 459470, 36.8529, -75.9780, 12),
+            ('Oakland', 'CA', 440646, 37.8044, -122.2712, 56),
+            ('Minneapolis', 'MN', 429954, 44.9778, -93.2650, 830),
+            ('Tulsa', 'OK', 413066, 36.1540, -95.9928, 722),
+            ('Tampa', 'FL', 399700, 27.9506, -82.4572, 48),
+            ('Arlington', 'TX', 398854, 32.7357, -97.1081, 616),
+            ('New Orleans', 'LA', 383997, 29.9511, -90.0715, -6);
+          "
+
+      - name: 📊 Insert Weather Stations Data
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d gis_intro -c "
+            -- Insert weather stations for some cities
+            INSERT INTO weather_stations (station_name, city_id, latitude, longitude, install_year, active) VALUES
+            ('NYC_CENTRAL_PARK', 1, 40.7829, -73.9654, 2010, true),
+            ('NYC_LGA_AIRPORT', 1, 40.7769, -73.8740, 2012, true),
+            ('LA_DOWNTOWN', 2, 34.0522, -118.2437, 2008, true),
+            ('LA_LAX_AIRPORT', 2, 33.9425, -118.4081, 2005, true),
+            ('LA_HOLLYWOOD', 2, 34.1022, -118.3269, 2015, false),
+            ('CHI_OHARE', 3, 41.9742, -87.9073, 2009, true),
+            ('CHI_MIDWAY', 3, 41.7868, -87.7505, 2011, true),
+            ('CHI_DOWNTOWN', 3, 41.8781, -87.6298, 2013, true),
+            ('HOU_INTERCONTINENTAL', 4, 29.9844, -95.3414, 2007, true),
+            ('HOU_HOBBY', 4, 29.6454, -95.2789, 2010, true),
+            ('PHX_SKY_HARBOR', 5, 33.4373, -112.0078, 2006, true),
+            ('SF_AIRPORT', 16, 37.6213, -122.3790, 2008, true),
+            ('SF_DOWNTOWN', 16, 37.7749, -122.4194, 2011, true),
+            ('SEATTLE_TACOMA', 18, 47.4502, -122.3088, 2009, true),
+            ('DENVER_INTL', 19, 39.8561, -104.6737, 2010, true),
+            ('BOSTON_LOGAN', 21, 42.3656, -71.0096, 2008, true),
+            ('DETROIT_METRO', 23, 42.2162, -83.3554, 2007, true),
+            ('ATLANTA_HARTSFIELD', 38, 33.6407, -84.4277, 2005, true),
+            ('MIAMI_INTL', 43, 25.7932, -80.2906, 2006, true),
+            ('DALLAS_DFW', 9, 32.8998, -97.0403, 2008, true);
+          "
+
+      - name: 📊 Insert Temperature Readings Data
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d gis_intro -c "
+            -- Insert sample temperature readings for the past year
+            INSERT INTO temperature_readings (station_id, reading_date, temp_high_f, temp_low_f, humidity_percent)
+            SELECT
+                s.station_id,
+                CURRENT_DATE - (RANDOM() * 365)::INTEGER as reading_date,
+                (RANDOM() * 40 + 50)::DECIMAL(5,2) as temp_high_f,
+                (RANDOM() * 30 + 30)::DECIMAL(5,2) as temp_low_f,
+                (RANDOM() * 60 + 20)::DECIMAL(5,2) as humidity_percent
+            FROM weather_stations s
+            CROSS JOIN generate_series(1, 50) -- 50 readings per station
+            WHERE s.active = true;
+          "
+
+      - name: ✅ Verify Database Setup
+        run: |
+          echo "🔍 Verifying database tables and data..."
+          PGPASSWORD=postgres psql -h localhost -U postgres -d gis_intro -c "
+            SELECT 'cities' as table_name, COUNT(*) as record_count FROM cities
+            UNION ALL
+            SELECT 'state_info', COUNT(*) FROM state_info
+            UNION ALL
+            SELECT 'weather_stations', COUNT(*) FROM weather_stations
+            UNION ALL
+            SELECT 'temperature_readings', COUNT(*) FROM temperature_readings;
+          "
+
+      - name: 🧪 Run SQL Assignment Test Suite
+        run: |
+          echo "🚀 Running automated test suite for SQL queries..."
+          python test_assignment.py -v --tb=short
+        continue-on-error: true
+
+      - name: 📊 Calculate Assignment Grade
+        run: |
+          echo "📋 Calculating assignment grade..."
+          python grading/calculate_grade.py --verbose --output grade-report.json
+
+      - name: 📈 Display Grade Summary
+        run: |
+          echo "📊 ASSIGNMENT GRADE SUMMARY"
+          echo "=========================="
+          if [ -f grade-report.json ]; then
+            echo "Score: $ASSIGNMENT_SCORE/$POSSIBLE_POINTS points ($GRADE_PERCENTAGE%)"
+            echo "Grade: $LETTER_GRADE"
+            echo "Tests Passed: $TESTS_PASSED/$TESTS_TOTAL"
+            echo "SQL Queries Completed: $SQL_QUERIES_COMPLETED/10"
+            echo "Syntax Accuracy: $SYNTAX_ACCURACY"
+            echo ""
+            echo "📝 Grade report saved to grade-report.json"
+          else
+            echo "❌ Grade report not generated"
+          fi
+
+      - name: 📎 Upload Grade Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-intro-grade-report
+          path: |
+            grade-report.json
+            test-results.html
+          retention-days: 30
+
+      - name: 📊 Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sql-intro-test-results
+          path: |
+            test-results.json
+            sql/*.sql
+          retention-days: 30
+
+      - name: 🎯 Set Job Status Based on Grade
+        run: |
+          if [ "$GRADE_PERCENTAGE" ]; then
+            grade_num=$(echo $GRADE_PERCENTAGE | cut -d'.' -f1)
+            if [ "$grade_num" -ge 70 ]; then
+              echo "✅ Assignment passed with $GRADE_PERCENTAGE% (Grade: $LETTER_GRADE)"
+              exit 0
+            else
+              echo "❌ Assignment did not meet minimum requirements: $GRADE_PERCENTAGE% (Grade: $LETTER_GRADE)"
+              echo "💡 Minimum passing grade is 70%"
+              exit 1
+            fi
+          else
+            echo "⚠️ Could not determine grade - check assignment files"
+            exit 1
+          fi
+
+      - name: 🔍 Debug Information (On Failure)
+        if: failure()
+        run: |
+          echo "🐛 DEBUG INFORMATION"
+          echo "==================="
+          echo "📁 Assignment files:"
+          ls -la sql/*.sql 2>/dev/null || echo "No SQL files found in sql/ directory"
+          echo ""
+          echo "🗄️ Database tables:"
+          PGPASSWORD=postgres psql -h localhost -U postgres -d gis_intro -c "\dt" || echo "Could not list tables"
+          echo ""
+          echo "🌐 Environment variables:"
+          env | grep -E "(ASSIGNMENT|GRADE|TEST)" | sort
+          echo ""
+          echo "📊 PostgreSQL status:"
+          pg_isready -h localhost -p 5432 -U postgres || echo "PostgreSQL not ready"
+
+      - name: 🎓 Professional Context Summary
+        if: always()
+        run: |
+          echo ""
+          echo "🎓 PROFESSIONAL DEVELOPMENT CONTEXT"
+          echo "=================================="
+          echo "✅ Skills Assessed:"
+          echo "   • Basic SQL syntax and query structure"
+          echo "   • Data filtering with WHERE clauses"
+          echo "   • Sorting and organizing results"
+          echo "   • Aggregate functions and data summarization"
+          echo "   • Grouping data for analysis"
+          echo "   • Joining tables to combine datasets"
+          echo "   • Complex query construction"
+          echo ""
+          echo "🏢 Industry Relevance:"
+          echo "   • Essential foundation for ALL database roles"
+          echo "   • Direct preparation for GIS database administration"
+          echo "   • Critical for data analysis and business intelligence"
+          echo "   • Required for application development with databases"
+          echo ""
+          echo "🚀 Next Steps:"
+          echo "   • Ready for PostGIS spatial functions (ST_Area, ST_Distance, etc.)"
+          echo "   • Prepared for advanced spatial database operations"
+          echo "   • Foundation for enterprise GIS database management"
+          echo ""
+          echo "💡 Remember: Every PostGIS query uses these same SQL fundamentals!"
