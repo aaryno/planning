@@ -1,47 +1,57 @@
 # PostGIS Spatial Analysis - Advanced Database Operations
 
 **GIST 604B - Module 6: PostGIS Spatial Databases**  
-**Assignment Type:** Application Level (⭐⭐⭐)  
-**Points:** 20 (4 queries × 5 points each)  
-**Estimated Time:** 4-5 hours  
+**Assignment Type:** Foundation Level (⭐⭐)  
+**Points:** 20 (10 queries × 2 points each)  
+**Estimated Time:** 3-4 hours  
 **Prerequisites:** SQL Introduction Assignment, PostGIS Basics Assignment
 
 ## 📖 Overview
 
-Welcome to your advanced PostGIS spatial analysis assignment! This application-level exercise challenges you to perform sophisticated spatial operations that form the backbone of professional GIS workflows. You'll tackle real-world spatial analysis problems using complex queries that combine multiple PostGIS functions, spatial relationships, and decision-support methodologies.
+Welcome to your advanced PostGIS spatial analysis assignment! This foundation-level exercise builds systematically from guided examples to independent challenges, teaching you sophisticated spatial operations essential for professional GIS work. You'll progress from basic spatial inspection to complex multi-criteria decision analysis, developing the analytical skills that distinguish GIS professionals from basic users.
 
 ### 🎯 Learning Objectives
 
 By completing this assignment, you will:
 
-- **Master multi-layer spatial analysis** using complex intersection operations
-- **Implement advanced buffer analysis** with distance-based accessibility modeling
-- **Develop network routing concepts** for transportation optimization
-- **Apply multi-criteria decision analysis** for spatial planning and site selection
-- **Integrate multiple spatial datasets** in comprehensive analytical workflows
-- **Optimize spatial queries** for performance with large datasets
-- **Build professional-grade spatial analysis solutions** for real-world problems
+- **Master advanced spatial analysis workflows** from data inspection to complex decision modeling
+- **Develop progressive PostGIS expertise** through scaffolded learning from examples to challenges  
+- **Apply coordinate system transformations** for accurate spatial measurements and analysis
+- **Implement multi-layer spatial analysis** combining multiple datasets in comprehensive workflows
+- **Create professional-grade spatial analysis solutions** suitable for real-world applications
+- **Build confidence in spatial problem-solving** through guided practice and independent challenges
 
 ### 🏢 Professional Context
 
-**Why These Skills Matter for Your GIS Career:**
+**Why Progressive Spatial Analysis Skills Matter:**
 
-Advanced spatial analysis capabilities are what distinguish GIS professionals from basic users. These skills are essential for:
+This assignment mirrors how GIS professionals develop expertise - starting with foundational concepts and progressing to complex problem-solving. These progressive skills prepare you for:
 
-- **Urban Planners** analyzing optimal locations for new facilities and infrastructure
-- **Environmental Consultants** conducting impact assessments and conservation planning
-- **Emergency Management** professionals optimizing response strategies and resource allocation
-- **Transportation Engineers** designing efficient routing and accessibility solutions
-- **Business Intelligence** analysts performing location-based market analysis
-- **Research Scientists** conducting complex spatial modeling and decision support
+- **Environmental Consulting**: Impact assessments requiring multi-layer spatial analysis
+- **Urban and Regional Planning**: Site selection using multi-criteria decision analysis
+- **Emergency Management**: Network analysis for response optimization and coverage modeling
+- **Conservation Biology**: Habitat connectivity analysis and protected area management
+- **Business Intelligence**: Location analysis combining demographic, competitive, and accessibility factors
+- **Transportation Engineering**: Route optimization and accessibility planning
 
 **Real-World Applications:**
-- Site selection for new hospitals based on population coverage and accessibility
-- Environmental impact analysis for proposed development projects
-- Emergency response optimization with multi-criteria facility placement
-- Transportation network analysis for public transit planning
-- Conservation priority mapping using ecological and economic factors
-- Retail location analysis combining demographics, competition, and accessibility
+- Hospital site selection using accessibility, population, and service gap analysis
+- Environmental impact assessment for proposed developments
+- Emergency facility placement using multi-criteria decision frameworks
+- Transportation network analysis for public transit optimization
+- Conservation priority mapping using ecological and socioeconomic factors
+
+### 📈 Progressive Learning Design
+
+This assignment uses **scaffolded learning** where each query provides less guidance than the previous one:
+
+- **Queries 1-2**: Complete examples and guided templates
+- **Queries 3-4**: Templates with moderate guidance  
+- **Queries 5-6**: Reduced guidance requiring spatial thinking
+- **Queries 7-8**: Minimal guidance with strategic hints
+- **Queries 9-10**: Challenge problems with problem statements only
+
+This progression builds confidence while developing independent spatial analysis capabilities.
 
 ## 🚀 Getting Started
 
@@ -116,24 +126,12 @@ National parks, wilderness areas, and protected lands including:
 - Indian Peaks Wilderness (76,711 acres)
 - Multiple national monuments and wilderness areas
 
-**Key Columns:**
-- `geometry`: Protected area boundaries (MULTIPOLYGON, EPSG:4326)
-- `area_acres`: Precise area calculations
-- `visitor_count_annual`: Annual visitation data
-- `protection_level`: Conservation status
-
 #### `watersheds` Table (4 records - MULTIPOLYGON)
 Major river basin boundaries including:
 - Upper Colorado River Basin (17,800 sq mi, avg elevation 7,200 ft)
 - South Platte River Basin (24,300 sq mi, flows northeast)
 - Arkansas River Basin (25,000 sq mi, highest elevation basin)
 - Rio Grande Basin (8,000 sq mi, flows south)
-
-**Key Columns:**
-- `geometry`: Watershed boundaries (MULTIPOLYGON, EPSG:4326)
-- `drainage_area_sqmi`: Basin area in square miles
-- `primary_river`: Main river system
-- `flow_direction`: Regional drainage pattern
 
 #### `transportation_network` Table (8 records - MULTILINESTRING)
 Roads, trails, and waterways including:
@@ -143,24 +141,12 @@ Roads, trails, and waterways including:
 - Colorado Trail (486 miles, multi-use recreation)
 - Major rivers and scenic routes
 
-**Key Columns:**
-- `geometry`: Route alignments (MULTILINESTRING, EPSG:4326)
-- `route_type`: Highway, trail, river classification
-- `length_miles`: Accurate distance measurements
-- `seasonal_closure`: Winter accessibility restrictions
-
 #### `facilities` Table (12 records - POINT)
 Visitor services and operational facilities including:
 - Visitor centers with exhibits and education programs
 - Campgrounds with varying capacity (88-244 sites)
 - Ranger stations for emergency services
 - Research stations and mountain huts
-
-**Key Columns:**
-- `geometry`: Facility locations (POINT, EPSG:4326)
-- `facility_type`: Service classification
-- `capacity`: Visitor or operational capacity
-- `elevation_ft`: Altitude for accessibility planning
 
 #### `monitoring_stations` Table (10 records - POINT)
 Environmental and safety monitoring network including:
@@ -169,12 +155,6 @@ Environmental and safety monitoring network including:
 - Water quality sensors (temperature, pH, dissolved oxygen)
 - Seismic monitoring and stream gauges
 
-**Key Columns:**
-- `geometry`: Station locations (POINT, EPSG:4326)
-- `monitoring_type`: Data collection focus
-- `parameters_monitored`: Specific measurements
-- `operating_agency`: Responsible organization
-
 #### `land_use_zones` Table (5 records - MULTIPOLYGON)
 Management and ecological zones including:
 - Alpine Tundra Zone (125,000 acres, minimal management)
@@ -182,160 +162,144 @@ Management and ecological zones including:
 - Critical Wildlife Habitat (180,000 acres, seasonal restrictions)
 - Recreation Management Areas (varying intensity levels)
 
-**Key Columns:**
-- `geometry`: Zone boundaries (MULTIPOLYGON, EPSG:4326)
-- `management_intensity`: Conservation vs. use balance
-- `recreational_use`: Permitted activities
-- `elevation_range_ft`: Altitudinal characteristics
-
 ### Coordinate Systems Used
 - **WGS84 (EPSG:4326)**: Geographic coordinates for global compatibility
-- **Web Mercator (EPSG:3857)**: Projected coordinates for accurate area/distance calculations
+- **Web Mercator (EPSG:3857)**: Projected coordinates for accurate area/distance calculations  
 - **UTM Zone 13N (EPSG:26913)**: Regional projection for precision measurements
 
-## 📝 Assignment Tasks (4 Queries × 5 Points = 20 Points)
+## 📝 Assignment Tasks (10 Queries × 2 Points = 20 Points)
 
-Complete the following 4 advanced spatial analysis queries. Each query demonstrates sophisticated PostGIS operations essential for professional GIS work.
+Complete the following 10 spatial analysis queries with **progressive difficulty**. Early queries provide complete examples, while later queries require independent problem-solving.
 
-### Query 1: Multi-Layer Spatial Intersection Analysis (5 points)
-**File**: [`sql/01_multi_layer_intersection.sql`](sql/01_multi_layer_intersection.sql)
+### Query 1: Basic Spatial Data Inspection (2 points)
+**File**: [`sql/01_spatial_inspection.sql`](sql/01_spatial_inspection.sql)  
+**Difficulty**: ⭐ (Complete example provided)
 
-**Objective**: Perform complex spatial intersections between protected areas and watersheds to analyze conservation coverage and identify protection gaps.
+**Objective**: Inspect spatial data to understand geometry types, coordinate systems, and basic spatial properties.
 
-**Professional Context**: Environmental planners need to understand how protected areas are distributed across different watersheds to assess conservation coverage, identify gaps in protection, and prioritize areas for additional conservation measures.
-
-**Learning Example**: Here's how you might find simple overlaps between two spatial layers:
-```sql
--- Example: Find parks that intersect with a specific watershed
-SELECT pa.name, ws.name
-FROM protected_areas pa, watersheds ws
-WHERE ST_Intersects(pa.geometry, ws.geometry)
-  AND ws.name = 'Upper Colorado River Basin';
-```
-
-**Your Task**: Create a comprehensive intersection analysis that calculates:
-- **Overlap geometries** between protected areas and watersheds
-- **Precise area calculations** for overlapping regions (in acres)
-- **Percentage coverage** of protected areas within each watershed
-- **Percentage of watersheds** that contain protected areas
-- **Filtering** to show only significant overlaps (>1000 acres)
-- **Ranking** by overlap area (largest coverage first)
-
-**Keywords to Use**: `ST_Intersects`, `ST_Intersection`, `ST_Area`, `ST_Transform`, `INNER JOIN`, `HAVING`, `ORDER BY`, `ROUND`
-
-**Expected Results**: Your query should identify which protected areas span multiple watersheds, how much of each protected area falls within different river basins, and help prioritize watershed-based conservation planning.
+**What You Get**: A complete working example demonstrating PostGIS inspection functions.
+**What You Learn**: Data exploration, geometry types, coordinate systems, spatial extents.
 
 ---
 
-### Query 2: Advanced Buffer Analysis - Facility Accessibility (5 points)
-**File**: [`sql/02_advanced_buffer_analysis.sql`](sql/02_advanced_buffer_analysis.sql)
+### Query 2: Simple Buffer Operations (2 points)
+**File**: [`sql/02_simple_buffers.sql`](sql/02_simple_buffers.sql)  
+**Difficulty**: ⭐ (Example with blanks to fill)
 
-**Objective**: Perform advanced buffer analysis to determine facility accessibility from transportation networks and identify underserved areas requiring additional infrastructure.
+**Objective**: Create buffers around spatial features and calculate buffer areas and perimeters.
 
-**Professional Context**: Park managers need to assess visitor facility accessibility and identify areas where additional facilities may be needed. This analysis helps improve visitor services while ensuring emergency response capabilities.
-
-**Learning Example**: Here's how you might create a basic buffer around facilities:
-```sql
--- Example: Create 1-mile buffer around visitor centers
-SELECT f.name,
-       ST_Buffer(ST_Transform(f.geometry, 3857), 1609.34) as one_mile_buffer
-FROM facilities f
-WHERE f.facility_type = 'Visitor Center';
-```
-
-**Your Task**: Develop a comprehensive accessibility analysis that includes:
-- **Multiple buffer distances** (1-mile and 5-mile service areas)
-- **Transportation route counting** within buffer zones
-- **Distance calculations** to nearest major transportation routes
-- **Service area coverage** in square miles
-- **Accessibility ratings** based on transportation proximity
-- **Facility density analysis** showing isolation or clustering
-- **Filtering** for facilities with limited access (>2 miles from major routes)
-
-**Keywords to Use**: `ST_Buffer`, `ST_DWithin`, `ST_Intersects`, `ST_Distance`, `ST_Transform`, `ST_Union`, `WITH`, `CASE`, `COUNT`
-
-**Expected Results**: Your analysis should identify facilities with limited transportation access, quantify service area coverage, and help prioritize areas for infrastructure improvement.
+**What You Get**: Working example with clear blanks to complete for visitor centers.
+**What You Learn**: ST_Buffer(), coordinate transformations, area calculations.
 
 ---
 
-### Query 3: Network Routing Analysis - Transportation Optimization (5 points)
-**File**: [`sql/03_network_routing_analysis.sql`](sql/03_network_routing_analysis.sql)
+### Query 3: Basic Spatial Measurements (2 points)
+**File**: [`sql/03_spatial_measurements.sql`](sql/03_spatial_measurements.sql)  
+**Difficulty**: ⭐⭐ (Template with guidance)
 
-**Objective**: Analyze transportation network connectivity and routing efficiency between facilities to optimize emergency services, maintenance operations, and visitor transportation.
+**Objective**: Calculate distances, areas, and lengths using PostGIS measurement functions.
 
-**Professional Context**: Emergency responders and park operations need efficient transportation routes between facilities. This analysis identifies optimal routing strategies considering distance, elevation, and network constraints.
-
-**Learning Example**: Here's how you might calculate straight-line distances between facilities:
-```sql
--- Example: Find distance between two specific facilities
-SELECT f1.name as origin, f2.name as destination,
-       ST_Distance(
-         ST_Transform(f1.geometry, 3857),
-         ST_Transform(f2.geometry, 3857)
-       ) / 1609.34 as miles
-FROM facilities f1, facilities f2
-WHERE f1.name = 'Rocky Mountain National Park Visitor Center'
-  AND f2.name = 'Bear Lake Ranger Station';
-```
-
-**Your Task**: Build a comprehensive routing analysis that evaluates:
-- **Facility-to-facility routing** for all key combinations
-- **Straight-line vs. network distance** comparisons
-- **Routing efficiency ratios** (network/straight-line distance)
-- **Elevation change calculations** between facilities
-- **Route difficulty classifications** based on distance, elevation, and access
-- **Infrastructure improvement priorities** for inefficient routes
-- **Travel time estimates** considering elevation and route constraints
-
-**Keywords to Use**: `ST_Distance`, `ST_ShortestLine`, `ST_ClosestPoint`, `ST_Intersects`, `CROSS JOIN`, `ABS`, `CASE`, `STRING_AGG`
-
-**Expected Results**: Your analysis should identify the most and least efficient routes between facilities, prioritize infrastructure improvements, and provide travel time estimates for operational planning.
+**What You Get**: Structured template with TODO items and helpful hints.
+**What You Learn**: ST_Distance(), ST_Area(), ST_Length(), distance classifications.
 
 ---
 
-### Query 4: Multi-Criteria Spatial Decision Support Analysis (5 points)
-**File**: [`sql/04_multi_criteria_decision_analysis.sql`](sql/04_multi_criteria_decision_analysis.sql)
+### Query 4: Coordinate System Transformations (2 points)
+**File**: [`sql/04_coordinate_transformations.sql`](sql/04_coordinate_transformations.sql)  
+**Difficulty**: ⭐⭐ (Guided template)
 
-**Objective**: Implement comprehensive multi-criteria decision analysis (MCDA) to identify optimal locations for a new emergency response facility using weighted spatial factors and composite scoring.
+**Objective**: Master coordinate system transformations for accurate measurements across different projections.
 
-**Professional Context**: Park authorities need to establish a new emergency response facility to improve visitor safety and environmental monitoring response times. The location must optimize multiple competing factors including accessibility, coverage, operational efficiency, and cost considerations.
+**What You Get**: Guided template with coordinate system comparisons.
+**What You Learn**: ST_Transform(), SRID management, measurement accuracy.
 
-**Learning Example**: Here's how you might score a location based on a single criterion:
-```sql
--- Example: Score locations based on distance to transportation
-SELECT candidate_location,
-       CASE 
-         WHEN min_transport_distance < 2 THEN 100
-         WHEN min_transport_distance < 5 THEN 75
-         WHEN min_transport_distance < 10 THEN 50
-         ELSE 25
-       END as transport_accessibility_score
-FROM candidate_analysis;
-```
+---
 
-**Your Task**: Develop a sophisticated decision support system that includes:
-- **Candidate location grid** across the study area
-- **Transportation accessibility scoring** (25% weight)
-- **Facility coverage gap analysis** (30% weight)
-- **Monitoring station response coverage** (20% weight)
-- **Protected area service potential** (15% weight)
-- **Terrain suitability assessment** (10% weight)
-- **Weighted composite scoring** combining all criteria
-- **Site suitability rankings** with implementation recommendations
+### Query 5: Spatial Relationships (2 points)
+**File**: [`sql/05_spatial_relationships.sql`](sql/05_spatial_relationships.sql)  
+**Difficulty**: ⭐⭐ (Less guidance - moderate challenge)
 
-**Keywords to Use**: `ST_MakePoint`, `generate_series`, `ST_DWithin`, `ST_Intersection`, `ST_Buffer`, `CASE`, `AVG`, `COUNT`, `SUM`, `ORDER BY`, `LIMIT`
+**Objective**: Use spatial relationship functions to find features that intersect, contain, or are within other features.
 
-**Expected Results**: Your analysis should return the top 5 candidate locations for a new emergency response facility, showing weighted composite scores, individual criterion performance, and specific implementation recommendations.
+**What You Get**: Partial templates requiring spatial thinking.
+**What You Learn**: ST_Intersects(), ST_Contains(), ST_Within(), EXISTS clauses.
+
+---
+
+### Query 6: Spatial Joins and Multi-Table Analysis (2 points)
+**File**: [`sql/06_spatial_joins.sql`](sql/06_spatial_joins.sql)  
+**Difficulty**: ⭐⭐ (Moderate guidance - requires spatial thinking)
+
+**Objective**: Perform spatial joins between multiple datasets to combine attributes based on geometric relationships.
+
+**What You Get**: Strategic hints and partial examples.
+**What You Learn**: Spatial JOINs, LATERAL joins, multi-table spatial queries.
+
+---
+
+### Query 7: Complex Buffer Analysis and Service Area Modeling (2 points)
+**File**: [`sql/07_complex_buffer_analysis.sql`](sql/07_complex_buffer_analysis.sql)  
+**Difficulty**: ⭐⭐⭐ (Minimal guidance - requires independent spatial thinking)
+
+**Objective**: Perform advanced buffer operations including multi-distance buffers, buffer intersections, and service area analysis.
+
+**What You Get**: Problem outline with analysis requirements only.
+**What You Learn**: Multi-zone buffers, overlap analysis, service gap identification.
+
+---
+
+### Query 8: Multi-Layer Spatial Intersections (2 points)
+**File**: [`sql/08_multi_layer_intersections.sql`](sql/08_multi_layer_intersections.sql)  
+**Difficulty**: ⭐⭐⭐ (Hints only - significant independent work required)
+
+**Objective**: Perform complex multi-layer intersection analysis to understand how different spatial datasets overlap and interact.
+
+**What You Get**: Strategic hints and function suggestions only.
+**What You Learn**: Complex intersections, environmental impact analysis, multi-layer workflows.
+
+---
+
+### Query 9: Transportation Network Analysis and Accessibility Modeling (2 points)
+**File**: [`sql/09_network_analysis.sql`](sql/09_network_analysis.sql)  
+**Difficulty**: ⭐⭐⭐⭐ (Problem statement and strategic hints only)
+
+**Objective**: Analyze transportation network connectivity and accessibility to model optimal routing and identify infrastructure gaps.
+
+**What You Get**: Problem statement with strategic approach suggestions.
+**What You Learn**: Network analysis, accessibility modeling, routing efficiency.
+
+---
+
+### Query 10: Multi-Criteria Spatial Decision Analysis Challenge (2 points)
+**File**: [`sql/10_decision_analysis_challenge.sql`](sql/10_decision_analysis_challenge.sql)  
+**Difficulty**: ⭐⭐⭐⭐⭐ (Ultimate challenge - problem statement only)
+
+**Objective**: Implement a comprehensive multi-criteria decision analysis system to solve a complex real-world spatial planning problem.
+
+**What You Get**: Business problem statement and requirements only.
+**What You Learn**: MCDA methodology, spatial decision frameworks, professional analysis workflows.
 
 ## 🧪 Testing Your Solutions
 
 ### Test Individual SQL Files
 ```bash
 # Test a specific query
-python test_assignment.py::TestPostGISSpatialAnalysis::test_01_multi_layer_intersection -v
+python test_assignment.py::TestPostGISSpatialAnalysis::test_01_spatial_inspection -v
 
-# Test all queries
+# Run individual query in database
+docker exec -it postgis-spatial-analysis-postgres psql -U postgres -d spatial_analysis -f sql/01_spatial_inspection.sql
+```
+
+### Test All Queries
+```bash
+# Run complete test suite
 python test_assignment.py -v
+
+# Run all completed queries in sequence
+for i in {01..10}; do
+  echo "Testing query $i..."
+  docker exec -it postgis-spatial-analysis-postgres psql -U postgres -d spatial_analysis -f sql/${i}_*.sql
+done
 ```
 
 ### Interactive Testing
@@ -344,7 +308,7 @@ python test_assignment.py -v
 docker exec -it postgis-spatial-analysis-postgres psql -U postgres -d spatial_analysis
 
 # Run your SQL file
-\i sql/01_multi_layer_intersection.sql
+\i sql/01_spatial_inspection.sql
 ```
 
 ### Automated Grading
@@ -359,29 +323,40 @@ python grading/calculate_grade.py --json-output grade-report.json
 ## 📋 Submission Requirements
 
 ### Files to Submit
-Your submission must include all 4 completed SQL files:
-- `sql/01_multi_layer_intersection.sql` - Multi-layer intersection analysis
-- `sql/02_advanced_buffer_analysis.sql` - Advanced buffer and accessibility analysis
-- `sql/03_network_routing_analysis.sql` - Network routing and transportation optimization
-- `sql/04_multi_criteria_decision_analysis.sql` - Multi-criteria decision support analysis
+Your submission must include all completed SQL files:
+- `sql/01_spatial_inspection.sql` - Basic spatial data inspection
+- `sql/02_simple_buffers.sql` - Simple buffer operations  
+- `sql/03_spatial_measurements.sql` - Basic spatial measurements
+- `sql/04_coordinate_transformations.sql` - Coordinate system transformations
+- `sql/05_spatial_relationships.sql` - Spatial relationships
+- `sql/06_spatial_joins.sql` - Spatial joins and multi-table analysis
+- `sql/07_complex_buffer_analysis.sql` - Complex buffer analysis
+- `sql/08_multi_layer_intersections.sql` - Multi-layer spatial intersections
+- `sql/09_network_analysis.sql` - Transportation network analysis
+- `sql/10_decision_analysis_challenge.sql` - Multi-criteria decision analysis
 
-### Grading Criteria (5 points each = 20 total)
+### Grading Criteria (2 points each = 20 total)
 
 Each query is evaluated on:
-- **Query Execution (2 points)**: SQL runs without errors and returns valid results
-- **Spatial Analysis Accuracy (2 points)**: Correct use of PostGIS functions and spatial operations
-- **Results Quality (1 point)**: Appropriate filtering, ordering, and result formatting
+- **Query Execution (1 point)**: SQL runs without errors and returns valid results
+- **Spatial Analysis Accuracy (1 point)**: Correct use of PostGIS functions and logical results
+
+**Progressive Difficulty Expectations:**
+- **Queries 1-4**: Focus on correct completion of templates and understanding of concepts
+- **Queries 5-7**: Emphasis on spatial thinking and problem-solving approach
+- **Queries 8-10**: Advanced analysis demonstrating independent PostGIS mastery
 
 **Grade Scale:**
-- **18-20 points (90-100%)**: Advanced spatial analysis proficiency - ready for professional GIS work
-- **16-17 points (80-89%)**: Good spatial analysis skills - minor refinements needed
-- **14-15 points (70-79%)**: Adequate spatial analysis foundation - review complex operations
-- **Below 14 points (<70%)**: Needs significant improvement in spatial analysis concepts
+- **18-20 points (90-100%)**: Advanced PostGIS proficiency - ready for professional spatial analysis
+- **16-17 points (80-89%)**: Good spatial analysis foundation - minor refinements needed  
+- **14-15 points (70-79%)**: Adequate progress - focus on later challenges for improvement
+- **12-13 points (60-69%)**: Basic competency - review spatial concepts and practice
+- **Below 12 points (<60%)**: Needs significant improvement - consider additional study
 
 ### Submission Process
-1. Complete all 4 SQL query files
+1. Complete SQL query files working progressively from Query 1 to Query 10
 2. Test your queries using the automated test suite
-3. Verify results using the grading script
+3. Verify results using the grading script  
 4. Submit via your course management system or version control
 
 ## 🔧 PostGIS Quick Reference
@@ -391,30 +366,29 @@ Each query is evaluated on:
 -- Spatial Relationships
 ST_Intersects(geom1, geom2)      -- Test if geometries intersect
 ST_Contains(geom1, geom2)        -- Test if geom1 contains geom2
+ST_Within(geom1, geom2)          -- Test if geom1 is within geom2
 ST_DWithin(geom1, geom2, distance) -- Test if within distance
 
--- Spatial Operations
-ST_Intersection(geom1, geom2)    -- Return intersection geometry
+-- Spatial Operations  
 ST_Buffer(geometry, radius)      -- Create buffer around geometry
+ST_Intersection(geom1, geom2)    -- Return intersection geometry
 ST_Union(geometry_set)           -- Combine multiple geometries
+ST_Difference(geom1, geom2)      -- Return geom1 minus geom2
 
 -- Measurements
 ST_Area(geometry)                -- Calculate area
-ST_Length(geometry)              -- Calculate length
+ST_Length(geometry)              -- Calculate length  
 ST_Distance(geom1, geom2)        -- Calculate distance
 ST_Perimeter(geometry)           -- Calculate perimeter
 
 -- Coordinate Transformations
 ST_Transform(geometry, srid)     -- Transform coordinate system
-ST_SetSRID(geometry, srid)       -- Set spatial reference
+ST_SRID(geometry)                -- Get spatial reference ID
 
--- Geometry Construction
-ST_MakePoint(x, y)               -- Create point geometry
-ST_ShortestLine(geom1, geom2)    -- Shortest line between geometries
-ST_ClosestPoint(geom1, geom2)    -- Closest point on geometry
-
--- Spatial Indexing (automatic with GIST indexes)
-CREATE INDEX idx_table_geom ON table USING GIST (geometry);
+-- Data Inspection
+ST_GeometryType(geometry)        -- Get geometry type
+ST_AsText(geometry)              -- Convert to Well-Known Text
+ST_Extent(geometry_set)          -- Calculate bounding box
 ```
 
 ### Common Coordinate Systems
@@ -428,7 +402,7 @@ CREATE INDEX idx_table_geom ON table USING GIST (geometry);
 meters_to_miles = meters / 1609.34
 meters_to_feet = meters * 3.28084
 
--- Area conversions
+-- Area conversions  
 sq_meters_to_acres = sq_meters / 4047
 sq_meters_to_sq_miles = sq_meters / 2589988
 ```
@@ -448,89 +422,59 @@ sq_meters_to_sq_miles = sq_meters / 2589988
 - **Solution**: Check for valid geometry construction
 - Use `ST_IsValid(geometry)` to test geometry validity
 
-**"ERROR: GEOS operation xxx"**
-- **Solution**: Try `ST_MakeValid(geometry)` to fix geometry issues
-- Check for self-intersecting or degenerate geometries
+### Performance Tips
 
-### Performance Optimization
+**For large datasets:**
+- Always use spatial indexes (created automatically with GIST)
+- Transform to projected coordinates (3857 or 26913) for distance/area calculations
+- Use ST_DWithin() instead of ST_Distance() for "within distance" queries
 
-**Slow spatial queries**
-```sql
--- Check spatial indexes exist
-SELECT schemaname, tablename, indexname 
-FROM pg_indexes 
-WHERE indexname LIKE '%geom%' OR indexname LIKE '%gist%';
-
--- Verify index usage
-EXPLAIN ANALYZE SELECT ... WHERE ST_Intersects(geom1, geom2);
-```
-
-**Memory issues with large calculations**
-```sql
--- Use simpler geometries when possible
-ST_Simplify(geometry, tolerance)
-
--- Transform only when necessary
--- Bad: ST_Area(ST_Transform(geometry, 3857)) in WHERE clause
--- Good: Transform once in subquery or WITH clause
-```
-
-### Database Connection Issues
-
-**Connection refused**
-```bash
-# Check if container is running
-docker-compose ps
-
-# Restart if necessary
-docker-compose down && docker-compose up -d
-
-# Check logs
-docker-compose logs postgres
-```
+**Query optimization:**
+- Place most selective conditions first in WHERE clauses
+- Use LIMIT when testing queries on large datasets
+- Consider using ST_Simplify() for complex geometries when appropriate
 
 ## 🎯 Success Criteria
 
 ### Technical Proficiency Indicators
-- [ ] All 4 spatial analysis queries execute without errors
+- [ ] All completed queries execute without errors
 - [ ] Proper use of coordinate transformations for accurate measurements
-- [ ] Efficient spatial joins using appropriate indexes
-- [ ] Complex spatial operations combining multiple PostGIS functions
-- [ ] Meaningful filtering and ordering of spatial results
+- [ ] Logical progression from guided examples to independent analysis
+- [ ] Appropriate spatial functions chosen for each analysis goal
+- [ ] Evidence of spatial thinking and problem-solving development
 
 ### Professional Readiness Markers
-- [ ] Understanding of multi-criteria spatial decision processes
-- [ ] Ability to optimize spatial queries for performance
-- [ ] Knowledge of real-world applications for each analysis type
-- [ ] Skill in interpreting and validating spatial analysis results
-- [ ] Confidence with advanced PostGIS functions and workflows
+- [ ] Understanding of when and why to use different PostGIS functions
+- [ ] Ability to interpret and validate spatial analysis results
+- [ ] Progression from template completion to original analysis design
+- [ ] Confidence with both basic and advanced PostGIS operations
+- [ ] Readiness for complex professional spatial analysis projects
 
-### Preparation for Advanced GIS Work
-Upon successful completion, you will be prepared for:
-- **Enterprise spatial database development** with large, complex datasets
-- **Advanced GIS analysis projects** requiring custom spatial algorithms
-- **Spatial decision support systems** for planning and management
-- **Performance optimization** of spatial queries and workflows
-- **Integration** of PostGIS with web mapping and desktop GIS applications
-
-### Key Insight
-*"Advanced spatial analysis is not just about knowing the right PostGIS functions—it's about understanding how to combine them intelligently to solve complex real-world problems while considering performance, accuracy, and decision-making requirements."*
+### Learning Journey Assessment
+- **Queries 1-4**: Demonstrate understanding of fundamental spatial concepts
+- **Queries 5-7**: Show ability to adapt concepts to new problems
+- **Queries 8-10**: Exhibit independent spatial analysis capability
 
 ## 📚 Learning Resources
 
 ### Essential References
 - [PostGIS Documentation](https://postgis.net/documentation/) - Comprehensive function reference
-- [PostGIS Cookbook](https://postgis.net/workshops/) - Practical examples and workflows
-- [Spatial Analysis Methods](https://www.spatialanalysisonline.com/) - Theoretical background
+- [PostGIS Tutorial](https://postgis.net/workshops/postgis-intro/) - Hands-on learning
+- [Spatial Analysis Concepts](https://www.spatialanalysisonline.com/) - Theoretical background
 - [QGIS Training Manual](https://docs.qgis.org/latest/en/docs/training_manual/) - Desktop GIS integration
 
 ### Practice Recommendations
-1. **Experiment** with different buffer sizes and see how they affect accessibility analysis
-2. **Visualize** your query results in QGIS to verify spatial logic
-3. **Optimize** queries by testing different approaches and comparing performance
-4. **Research** real-world applications of each analysis type in your field of interest
-5. **Practice** explaining your analysis methods and results to non-technical audiences
+1. **Start with examples** - Understand each provided example completely before adapting
+2. **Test frequently** - Run queries often during development to catch errors early
+3. **Visualize results** - Use QGIS to map your query results when possible
+4. **Progress gradually** - Master each query level before moving to the next
+5. **Seek help appropriately** - Early queries should focus on concept understanding, later queries on problem-solving approach
+
+### Support Strategy
+- **Queries 1-4**: Focus on understanding the PostGIS functions and spatial concepts
+- **Queries 5-7**: Emphasize spatial thinking and logical problem decomposition
+- **Queries 8-10**: Develop independent analysis skills and creative problem-solving
 
 ---
 
-**🎓 Ready to tackle professional-level spatial analysis? Your expertise in advanced PostGIS operations will set you apart in the GIS profession!**
+**🎓 Ready to master advanced PostGIS spatial analysis? This progressive journey will build your expertise from basic concepts to professional-level spatial analysis capabilities!**

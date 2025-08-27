@@ -3,14 +3,13 @@
 PostGIS Spatial Analysis Assignment - Professional Grading Engine
 ================================================================
 
-Automated grading system for advanced spatial analysis queries.
-Each query is worth 5 points for a total of 20 points.
+Automated grading system for progressive spatial analysis queries.
+Each query is worth 2 points for a total of 20 points.
 
-Assignment Categories (4 functions × 5 points = 20 total):
-- Multi-Layer Intersection Analysis (5 points)
-- Advanced Buffer Analysis (5 points)
-- Network Routing Analysis (5 points)
-- Multi-Criteria Decision Analysis (5 points)
+Foundation Assignment Pattern (10 functions × 2 points = 20 total):
+- Queries 1-4: Guided examples and templates (higher completion expectations)
+- Queries 5-7: Moderate challenges (partial credit for attempts)
+- Queries 8-10: Advanced challenges (bonus credit for completion)
 
 Usage:
     python grading/calculate_grade.py
@@ -43,12 +42,25 @@ class PostGISSpatialAnalysisGrader:
         self.connection = None
         self.cursor = None
 
-        # Grading criteria for each query
+        # Progressive difficulty structure
         self.query_points = {
-            "01_multi_layer_intersection": 5,
-            "02_advanced_buffer_analysis": 5,
-            "03_network_routing_analysis": 5,
-            "04_multi_criteria_decision_analysis": 5
+            "01_spatial_inspection": 2,
+            "02_simple_buffers": 2,
+            "03_spatial_measurements": 2,
+            "04_coordinate_transformations": 2,
+            "05_spatial_relationships": 2,
+            "06_spatial_joins": 2,
+            "07_complex_buffer_analysis": 2,
+            "08_multi_layer_intersections": 2,
+            "09_network_analysis": 2,
+            "10_decision_analysis_challenge": 2
+        }
+
+        # Difficulty levels for adaptive grading
+        self.difficulty_levels = {
+            "guided": ["01_spatial_inspection", "02_simple_buffers", "03_spatial_measurements", "04_coordinate_transformations"],
+            "moderate": ["05_spatial_relationships", "06_spatial_joins", "07_complex_buffer_analysis"],
+            "advanced": ["08_multi_layer_intersections", "09_network_analysis", "10_decision_analysis_challenge"]
         }
 
     def log(self, message: str, level: str = "INFO"):
@@ -97,7 +109,7 @@ class PostGISSpatialAnalysisGrader:
             with open(sql_file, 'r') as f:
                 sql_content = f.read()
 
-            # Remove comments and check for TODO items
+            # Remove comments for execution
             sql_lines = []
             in_comment_block = False
 
@@ -124,9 +136,22 @@ class PostGISSpatialAnalysisGrader:
 
             sql_query = ' '.join(sql_lines)
 
-            # Check for incomplete work
-            if '____' in sql_query or 'TODO' in sql_query.upper():
-                return False, [], "Query contains unfinished TODO items or placeholder blanks"
+            # Check for incomplete work - but handle progressive difficulty
+            query_num = int(filename[:2])
+
+            if '____' in sql_query:
+                if query_num <= 4:  # Guided templates should be completed
+                    return False, [], "Query contains unfinished template blanks"
+                else:  # Advanced queries may have some blanks as design choices
+                    if sql_query.count('____') > 10:
+                        return False, [], "Query appears significantly incomplete"
+
+            # Check if query is too short (likely not implemented)
+            if len(sql_query.strip()) < 30:
+                if query_num <= 7:
+                    return False, [], "Query not implemented"
+                else:
+                    return False, [], "Advanced challenge not attempted"
 
             # Execute the query
             self.cursor.execute(sql_query)
@@ -139,306 +164,138 @@ class PostGISSpatialAnalysisGrader:
         except Exception as e:
             return False, [], f"File processing error: {str(e)}"
 
-    def validate_intersection_analysis(self, results: List[Tuple]) -> Tuple[int, str]:
-        """Validate multi-layer intersection analysis results."""
+    def grade_guided_query(self, query_name: str, results: List[Tuple]) -> Tuple[int, str]:
+        """Grade guided queries (01-04) with high expectations for completion."""
         try:
             if not results:
-                return 0, "No results returned - query may be incomplete"
+                return 0, "No results returned - template may not be completed"
 
-            # Check minimum number of results
-            if len(results) < 3:
-                return 1, f"Only {len(results)} intersections found, expected at least 3"
+            # Basic execution gets 1 point
+            points = 1
+            feedback = ["Query executed successfully"]
 
-            # Validate result structure (should have 7+ columns)
-            if len(results[0]) < 7:
-                return 1, f"Insufficient columns ({len(results[0])}), expected at least 7"
-
-            points = 2  # Base points for execution
-            feedback = []
-
-            # Check for spatial analysis components
-            for row in results[:3]:  # Check first 3 rows
-                protected_area = row[0]
-                watershed_name = row[3] if len(row) > 3 else None
-                overlap_acres = row[5] if len(row) > 5 else None
-                percent_protected = row[6] if len(row) > 6 else None
-
-                if protected_area is None:
-                    feedback.append("Protected area names missing")
-                    break
-
-                if watershed_name is None:
-                    feedback.append("Watershed names missing")
-                    break
-
-                if not isinstance(overlap_acres, (int, float)) or overlap_acres <= 0:
-                    feedback.append("Invalid overlap area calculations")
-                    break
-
-                if not isinstance(percent_protected, (int, float)) or not (0 <= percent_protected <= 100):
-                    feedback.append("Invalid percentage calculations")
-                    break
-            else:
-                points += 1  # +1 for correct data structure
-                feedback.append("Correct intersection analysis structure")
-
-            # Check if results are ordered by area (largest first)
-            try:
-                overlap_areas = [float(row[5]) for row in results if len(row) > 5]
-                if overlap_areas == sorted(overlap_areas, reverse=True):
-                    points += 1  # +1 for correct ordering
-                    feedback.append("Results properly ordered by overlap area")
+            # Check result quality for second point
+            if query_name == "01_spatial_inspection":
+                # Should inspect multiple datasets
+                if len(results) >= 3:
+                    points = 2
+                    feedback.append("Successfully inspected multiple spatial datasets")
                 else:
-                    feedback.append("Results not ordered correctly")
-            except:
-                feedback.append("Could not validate ordering")
+                    feedback.append("Incomplete dataset inspection")
 
-            # Check for significant overlaps only (filtering)
-            significant_overlaps = [r for r in results if len(r) > 5 and float(r[5]) > 1000]
-            if len(significant_overlaps) == len(results):
-                points += 1  # +1 for proper filtering
-                feedback.append("Correctly filtered to significant overlaps")
-
-            return min(points, 5), "; ".join(feedback)
-
-        except Exception as e:
-            return 1, f"Validation error: {str(e)}"
-
-    def validate_buffer_analysis(self, results: List[Tuple]) -> Tuple[int, str]:
-        """Validate advanced buffer analysis results."""
-        try:
-            if not results:
-                return 0, "No results returned - query may be incomplete"
-
-            if len(results) < 2:
-                return 1, f"Only {len(results)} facilities found, expected at least 2"
-
-            # Validate result structure (should have 8+ columns)
-            if len(results[0]) < 8:
-                return 1, f"Insufficient columns ({len(results[0])}), expected at least 8"
-
-            points = 2  # Base points for execution
-            feedback = []
-
-            # Validate buffer analysis components
-            for row in results[:3]:
-                facility_name = row[0]
-                routes_1mile = row[2] if len(row) > 2 else None
-                routes_5mile = row[3] if len(row) > 3 else None
-                closest_distance = row[4] if len(row) > 4 else None
-                accessibility_rating = row[7] if len(row) > 7 else None
-
-                if facility_name is None:
-                    feedback.append("Facility names missing")
-                    break
-
-                if not isinstance(routes_1mile, int) or routes_1mile < 0:
-                    feedback.append("Invalid 1-mile route counts")
-                    break
-
-                if not isinstance(routes_5mile, int) or routes_5mile < routes_1mile:
-                    feedback.append("Invalid 5-mile route counts (should be >= 1-mile counts)")
-                    break
-
-                if not isinstance(closest_distance, (int, float)) or closest_distance <= 0:
-                    feedback.append("Invalid distance calculations")
-                    break
-
-                if accessibility_rating not in ['Excellent Access', 'Good Access', 'Limited Access', 'Remote Location']:
-                    feedback.append("Invalid accessibility ratings")
-                    break
-            else:
-                points += 1  # +1 for correct data structure
-                feedback.append("Correct buffer analysis structure")
-
-            # Check for limited access filtering
-            limited_access_count = sum(1 for row in results if len(row) > 4 and float(row[4]) > 2.0)
-            if limited_access_count >= len(results) // 2:
-                points += 1  # +1 for proper filtering
-                feedback.append("Correctly filtered for limited access facilities")
-
-            # Check ordering by accessibility (most remote first)
-            try:
-                distances = [float(row[4]) for row in results if len(row) > 4]
-                if distances == sorted(distances, reverse=True):
-                    points += 1  # +1 for correct ordering
-                    feedback.append("Results properly ordered by remoteness")
+            elif query_name == "02_simple_buffers":
+                # Should have buffer calculations
+                has_buffer_calcs = any(isinstance(row[i], (int, float)) and 2 <= float(row[i]) <= 5
+                                     for row in results for i in range(min(6, len(row)))
+                                     if row[i] is not None)
+                if has_buffer_calcs:
+                    points = 2
+                    feedback.append("Accurate buffer area calculations")
                 else:
-                    feedback.append("Ordering could be improved")
-            except:
-                feedback.append("Could not validate ordering")
+                    feedback.append("Buffer calculations may be incorrect")
 
-            return min(points, 5), "; ".join(feedback)
+            elif query_name == "03_spatial_measurements":
+                # Should have distance or area measurements
+                has_measurements = any(isinstance(row[i], (int, float)) and float(row[i]) > 0
+                                     for row in results for i in range(min(5, len(row)))
+                                     if row[i] is not None)
+                if has_measurements:
+                    points = 2
+                    feedback.append("Successful spatial measurements")
+                else:
+                    feedback.append("Spatial measurements may be missing")
 
-        except Exception as e:
-            return 1, f"Validation error: {str(e)}"
-
-    def validate_routing_analysis(self, results: List[Tuple]) -> Tuple[int, str]:
-        """Validate network routing analysis results."""
-        try:
-            if not results:
-                return 0, "No results returned - query may be incomplete"
-
-            if len(results) < 3:
-                return 1, f"Only {len(results)} route pairs found, expected at least 3"
-
-            # Validate result structure (should have 10+ columns)
-            if len(results[0]) < 10:
-                return 1, f"Insufficient columns ({len(results[0])}), expected at least 10"
-
-            points = 2  # Base points for execution
-            feedback = []
-
-            # Validate routing analysis components
-            routing_ratios = []
-            for row in results[:3]:
-                origin_name = row[0]
-                destination_name = row[2] if len(row) > 2 else None
-                straight_line_miles = row[4] if len(row) > 4 else None
-                network_miles = row[5] if len(row) > 5 else None
-                efficiency_ratio = row[6] if len(row) > 6 else None
-                route_difficulty = row[9] if len(row) > 9 else None
-
-                if origin_name == destination_name:
-                    feedback.append("Origin and destination should be different")
-                    break
-
-                if not isinstance(straight_line_miles, (int, float)) or straight_line_miles <= 0:
-                    feedback.append("Invalid straight-line distance calculations")
-                    break
-
-                if not isinstance(network_miles, (int, float)) or network_miles < straight_line_miles:
-                    feedback.append("Invalid network distance calculations")
-                    break
-
-                if not isinstance(efficiency_ratio, (int, float)) or efficiency_ratio < 1.0:
-                    feedback.append("Invalid efficiency ratio calculations")
-                    break
-
-                if route_difficulty not in ['Easy', 'Moderate', 'Difficult', 'Very Difficult']:
-                    feedback.append("Invalid route difficulty classifications")
-                    break
-
-                routing_ratios.append(float(efficiency_ratio))
-            else:
-                points += 1  # +1 for correct data structure
-                feedback.append("Correct routing analysis structure")
-
-            # Check for inefficient routes (focus of analysis)
-            inefficient_routes = [r for r in routing_ratios if r > 2.0]
-            if inefficient_routes:
-                points += 1  # +1 for identifying inefficient routes
-                feedback.append(f"Successfully identified {len(inefficient_routes)} inefficient routes")
-
-            # Check ordering logic
-            try:
-                # Should be ordered by improvement priority and efficiency
-                priority_order = []
+            elif query_name == "04_coordinate_transformations":
+                # Should demonstrate coordinate system differences
+                coordinate_ranges = []
                 for row in results:
-                    if len(row) > 10:
-                        priority = row[10]
-                        if priority == 'High Priority':
-                            priority_order.append(1)
-                        elif priority == 'Medium Priority':
-                            priority_order.append(2)
-                        else:
-                            priority_order.append(3)
+                    for i in range(2, min(6, len(row))):
+                        if isinstance(row[i], (int, float)):
+                            coordinate_ranges.append(abs(float(row[i])))
 
-                if priority_order == sorted(priority_order):
-                    points += 1  # +1 for correct prioritization
-                    feedback.append("Results properly prioritized")
-            except:
-                feedback.append("Could not validate prioritization")
+                # Should have both small (degrees) and large (projected) coordinates
+                if coordinate_ranges and max(coordinate_ranges) > 1000 * min(coordinate_ranges):
+                    points = 2
+                    feedback.append("Successful coordinate system transformations")
+                else:
+                    feedback.append("Coordinate transformation may be incomplete")
 
-            return min(points, 5), "; ".join(feedback)
+            return points, "; ".join(feedback)
 
         except Exception as e:
-            return 1, f"Validation error: {str(e)}"
+            return 1, f"Execution successful but validation error: {str(e)}"
 
-    def validate_decision_analysis(self, results: List[Tuple]) -> Tuple[int, str]:
-        """Validate multi-criteria decision analysis results."""
+    def grade_moderate_query(self, query_name: str, results: List[Tuple]) -> Tuple[int, str]:
+        """Grade moderate difficulty queries (05-07) with partial credit."""
         try:
             if not results:
-                return 0, "No results returned - query may be incomplete"
+                return 0, "No results returned - query may not be implemented"
 
-            if len(results) < 3:
-                return 1, f"Only {len(results)} candidates found, expected at least 3"
+            # Basic execution gets 1 point
+            points = 1
+            feedback = ["Query executed successfully"]
 
-            # Validate result structure (should have 12+ columns)
-            if len(results[0]) < 12:
-                return 1, f"Insufficient columns ({len(results[0])}), expected at least 12"
+            # Additional point for meaningful results
+            if len(results) >= 2 and len(results[0]) >= 3:
+                points = 2
+                feedback.append("Meaningful spatial analysis results")
 
-            points = 2  # Base points for execution
-            feedback = []
+                # Bonus indicators for quality
+                if query_name == "05_spatial_relationships":
+                    # Look for evidence of spatial relationship functions
+                    relationship_evidence = any('protected' in str(cell).lower() or 'watershed' in str(cell).lower()
+                                              for row in results for cell in row if cell is not None)
+                    if relationship_evidence:
+                        feedback.append("Evidence of spatial relationship analysis")
 
-            # Validate multi-criteria analysis components
-            composite_scores = []
-            for row in results[:5]:  # Check first 5 candidates
-                longitude = row[1] if len(row) > 1 else None
-                latitude = row[2] if len(row) > 2 else None
-                transport_score = row[3] if len(row) > 3 else None
-                coverage_score = row[4] if len(row) > 4 else None
-                monitoring_score = row[5] if len(row) > 5 else None
-                protected_score = row[6] if len(row) > 6 else None
-                terrain_score = row[7] if len(row) > 7 else None
-                composite_score = row[8] if len(row) > 8 else None
-                suitability = row[9] if len(row) > 9 else None
+                elif query_name == "06_spatial_joins":
+                    # Look for multi-table attributes
+                    if len(results[0]) >= 5:
+                        feedback.append("Multi-table spatial join successful")
 
-                # Validate coordinates
-                if not isinstance(longitude, (int, float)) or not (-110 <= longitude <= -104):
-                    feedback.append("Invalid longitude coordinates")
-                    break
+                elif query_name == "07_complex_buffer_analysis":
+                    # Look for complex buffer analysis
+                    if any(isinstance(cell, (int, float)) and float(cell) > 1
+                          for row in results for cell in row if cell is not None):
+                        feedback.append("Complex buffer calculations present")
 
-                if not isinstance(latitude, (int, float)) or not (36 <= latitude <= 42):
-                    feedback.append("Invalid latitude coordinates")
-                    break
-
-                # Validate individual scores (0-100 scale)
-                scores = [transport_score, coverage_score, monitoring_score, protected_score, terrain_score]
-                for i, score in enumerate(scores):
-                    if not isinstance(score, (int, float)) or not (0 <= score <= 100):
-                        feedback.append(f"Invalid criterion score {i+1}")
-                        break
-                else:
-                    # Validate composite score
-                    if not isinstance(composite_score, (int, float)) or not (0 <= composite_score <= 100):
-                        feedback.append("Invalid composite score calculation")
-                        break
-
-                    # Validate weighted calculation (approximately)
-                    expected_composite = (transport_score * 0.25 + coverage_score * 0.30 +
-                                        monitoring_score * 0.20 + protected_score * 0.15 + terrain_score * 0.10)
-                    if abs(composite_score - expected_composite) > 2.0:
-                        feedback.append("Composite score calculation error")
-                        break
-
-                    if suitability not in ['Excellent', 'Good', 'Fair', 'Poor']:
-                        feedback.append("Invalid suitability rating")
-                        break
-
-                    composite_scores.append(float(composite_score))
-            else:
-                points += 1  # +1 for correct data structure
-                feedback.append("Correct multi-criteria analysis structure")
-
-            # Check ordering by composite score (best first)
-            if composite_scores == sorted(composite_scores, reverse=True):
-                points += 1  # +1 for correct ordering
-                feedback.append("Results properly ordered by composite score")
-
-            # Check for viable candidates (quality filtering)
-            viable_sites = [s for s in composite_scores if s >= 60]
-            if len(viable_sites) >= 2:
-                points += 1  # +1 for identifying viable candidates
-                feedback.append(f"Successfully identified {len(viable_sites)} viable candidate sites")
-
-            return min(points, 5), "; ".join(feedback)
+            return points, "; ".join(feedback)
 
         except Exception as e:
-            return 1, f"Validation error: {str(e)}"
+            return 1, f"Execution successful but validation error: {str(e)}"
+
+    def grade_advanced_query(self, query_name: str, results: List[Tuple]) -> Tuple[int, str]:
+        """Grade advanced challenge queries (08-10) with bonus credit approach."""
+        try:
+            if not results:
+                return 0, "Advanced challenge not attempted or incomplete"
+
+            # Any meaningful result from advanced challenges deserves credit
+            points = 2  # Full credit for attempting advanced challenges
+            feedback = ["Advanced spatial analysis challenge completed"]
+
+            # Quality indicators
+            if len(results) >= 3:
+                feedback.append("Comprehensive analysis results")
+
+            if len(results[0]) >= 5:
+                feedback.append("Multi-factor analysis evident")
+
+            # Specific advanced query recognition
+            if query_name == "08_multi_layer_intersections":
+                feedback.append("Multi-layer intersection analysis accomplished")
+            elif query_name == "09_network_analysis":
+                feedback.append("Network analysis challenge completed")
+            elif query_name == "10_decision_analysis_challenge":
+                feedback.append("Ultimate MCDA challenge - exceptional work!")
+
+            return points, "; ".join(feedback)
+
+        except Exception as e:
+            return 1, f"Advanced challenge attempted but validation error: {str(e)}"
 
     def grade_query(self, query_name: str) -> Dict[str, Any]:
-        """Grade individual query and return results."""
+        """Grade individual query based on difficulty level."""
         filename = f"{query_name}.sql"
         max_points = self.query_points[query_name]
 
@@ -448,30 +305,50 @@ class PostGISSpatialAnalysisGrader:
         success, results, error_msg = self.execute_sql_file(filename)
 
         if not success:
+            # Handle different failure types based on difficulty
+            query_num = int(query_name[:2])
+
+            if "not found" in error_msg:
+                status = "FILE_MISSING"
+                points = 0
+            elif "not implemented" in error_msg or "not attempted" in error_msg:
+                if query_num <= 7:
+                    status = "NOT_IMPLEMENTED"
+                    points = 0
+                else:
+                    status = "ADVANCED_NOT_ATTEMPTED"
+                    points = 0
+            elif "incomplete" in error_msg:
+                if query_num <= 4:
+                    status = "TEMPLATE_INCOMPLETE"
+                    points = 0
+                else:
+                    status = "PARTIAL_ATTEMPT"
+                    points = 1  # Partial credit for attempt
+            else:
+                status = "EXECUTION_ERROR"
+                points = 0
+
             return {
                 "query": query_name,
                 "filename": filename,
-                "points_earned": 0,
+                "points_earned": points,
                 "points_possible": max_points,
-                "status": "FAILED",
+                "status": status,
                 "error": error_msg,
-                "feedback": f"Query failed to execute: {error_msg}",
+                "feedback": f"Query failed: {error_msg}",
                 "execution_time": 0.0
             }
 
-        # Validate query-specific requirements
+        # Grade based on difficulty level
         start_time = datetime.now()
 
-        if query_name == "01_multi_layer_intersection":
-            points, feedback = self.validate_intersection_analysis(results)
-        elif query_name == "02_advanced_buffer_analysis":
-            points, feedback = self.validate_buffer_analysis(results)
-        elif query_name == "03_network_routing_analysis":
-            points, feedback = self.validate_routing_analysis(results)
-        elif query_name == "04_multi_criteria_decision_analysis":
-            points, feedback = self.validate_decision_analysis(results)
-        else:
-            points, feedback = 0, "Unknown query type"
+        if query_name in self.difficulty_levels["guided"]:
+            points, feedback = self.grade_guided_query(query_name, results)
+        elif query_name in self.difficulty_levels["moderate"]:
+            points, feedback = self.grade_moderate_query(query_name, results)
+        else:  # advanced
+            points, feedback = self.grade_advanced_query(query_name, results)
 
         execution_time = (datetime.now() - start_time).total_seconds()
 
@@ -512,46 +389,60 @@ class PostGISSpatialAnalysisGrader:
         else:
             letter_grade = "F"
 
+        # Analyze completion by difficulty level
+        guided_points = sum(self.results.get(q, {}).get("points_earned", 0) for q in self.difficulty_levels["guided"])
+        moderate_points = sum(self.results.get(q, {}).get("points_earned", 0) for q in self.difficulty_levels["moderate"])
+        advanced_points = sum(self.results.get(q, {}).get("points_earned", 0) for q in self.difficulty_levels["advanced"])
+
         return {
-            "assignment": "PostGIS Spatial Analysis",
+            "assignment": "PostGIS Spatial Analysis - Foundation Level",
             "total_points": self.total_points,
             "possible_points": self.max_points,
             "percentage": round(percentage, 1),
             "letter_grade": letter_grade,
             "timestamp": datetime.now().isoformat(),
-            "category_breakdown": {
-                "multi_layer_intersection": {
-                    "earned": self.results.get("01_multi_layer_intersection", {}).get("points_earned", 0),
-                    "possible": 5,
-                    "status": self.results.get("01_multi_layer_intersection", {}).get("status", "NOT_ATTEMPTED")
+            "difficulty_breakdown": {
+                "guided_queries": {
+                    "points_earned": guided_points,
+                    "points_possible": 8,
+                    "queries": self.difficulty_levels["guided"]
                 },
-                "advanced_buffer_analysis": {
-                    "earned": self.results.get("02_advanced_buffer_analysis", {}).get("points_earned", 0),
-                    "possible": 5,
-                    "status": self.results.get("02_advanced_buffer_analysis", {}).get("status", "NOT_ATTEMPTED")
+                "moderate_queries": {
+                    "points_earned": moderate_points,
+                    "points_possible": 6,
+                    "queries": self.difficulty_levels["moderate"]
                 },
-                "network_routing_analysis": {
-                    "earned": self.results.get("03_network_routing_analysis", {}).get("points_earned", 0),
-                    "possible": 5,
-                    "status": self.results.get("03_network_routing_analysis", {}).get("status", "NOT_ATTEMPTED")
-                },
-                "multi_criteria_decision_analysis": {
-                    "earned": self.results.get("04_multi_criteria_decision_analysis", {}).get("points_earned", 0),
-                    "possible": 5,
-                    "status": self.results.get("04_multi_criteria_decision_analysis", {}).get("status", "NOT_ATTEMPTED")
+                "advanced_queries": {
+                    "points_earned": advanced_points,
+                    "points_possible": 6,
+                    "queries": self.difficulty_levels["advanced"]
                 }
             },
-            "detailed_results": self.results,
-            "performance_notes": {
-                "spatial_analysis_proficiency": "Advanced" if percentage >= 85 else "Intermediate" if percentage >= 70 else "Developing",
-                "postgis_mastery": percentage >= 80,
-                "ready_for_advanced_gis": percentage >= 75
+            "query_results": self.results,
+            "performance_analysis": {
+                "foundation_mastery": guided_points >= 6,
+                "spatial_thinking_development": moderate_points >= 4,
+                "advanced_challenge_success": advanced_points >= 2,
+                "ready_for_professional_work": percentage >= 80,
+                "postgis_proficiency_level": (
+                    "Advanced" if percentage >= 85 else
+                    "Intermediate" if percentage >= 70 else
+                    "Developing"
+                )
+            },
+            "learning_outcomes": {
+                "spatial_data_inspection": guided_points >= 2,
+                "coordinate_transformations": any("04_coordinate" in q and self.results.get(q, {}).get("points_earned", 0) >= 1 for q in self.results),
+                "spatial_relationships": any("05_spatial" in q and self.results.get(q, {}).get("points_earned", 0) >= 1 for q in self.results),
+                "multi_table_analysis": any("06_spatial" in q and self.results.get(q, {}).get("points_earned", 0) >= 1 for q in self.results),
+                "advanced_analysis": advanced_points >= 2
             }
         }
 
     def run_grading(self) -> Dict[str, Any]:
         """Execute the complete grading process."""
         self.log("Starting PostGIS Spatial Analysis Assignment Grading")
+        self.log("Progressive Difficulty: Guided → Moderate → Advanced")
         self.log("=" * 60)
 
         # Setup database connection
@@ -571,8 +462,16 @@ class PostGISSpatialAnalysisGrader:
                 self.results[query_name] = result
                 self.total_points += result["points_earned"]
 
-                self.log(f"{result['filename']}: {result['points_earned']}/{result['points_possible']} points - {result['status']}")
-                if result.get('feedback'):
+                # Determine difficulty level for logging
+                if query_name in self.difficulty_levels["guided"]:
+                    level = "GUIDED"
+                elif query_name in self.difficulty_levels["moderate"]:
+                    level = "MODERATE"
+                else:
+                    level = "ADVANCED"
+
+                self.log(f"[{level}] {result['filename']}: {result['points_earned']}/{result['points_possible']} points - {result['status']}")
+                if result.get('feedback') and self.verbose:
                     self.log(f"  Feedback: {result['feedback']}")
 
             # Generate final grade
@@ -580,6 +479,15 @@ class PostGISSpatialAnalysisGrader:
 
             self.log("=" * 60)
             self.log(f"FINAL GRADE: {final_grade['total_points']}/{final_grade['possible_points']} ({final_grade['percentage']}%) - {final_grade['letter_grade']}")
+
+            # Log difficulty breakdown
+            guided = final_grade['difficulty_breakdown']['guided_queries']
+            moderate = final_grade['difficulty_breakdown']['moderate_queries']
+            advanced = final_grade['difficulty_breakdown']['advanced_queries']
+
+            self.log(f"Guided Queries (1-4): {guided['points_earned']}/{guided['points_possible']}")
+            self.log(f"Moderate Queries (5-7): {moderate['points_earned']}/{moderate['points_possible']}")
+            self.log(f"Advanced Queries (8-10): {advanced['points_earned']}/{advanced['points_possible']}")
 
             # Set environment variables for GitHub Actions
             if os.getenv('GITHUB_ACTIONS'):
@@ -612,9 +520,38 @@ def main():
             json.dump(results, f, indent=2)
         print(f"\nDetailed results saved to {args.json_output}")
 
+    # Display summary
+    print("\n" + "=" * 60)
+    print("POSTGIS SPATIAL ANALYSIS - GRADING SUMMARY")
+    print("=" * 60)
+    print(f"Assignment: Foundation Level (Progressive Difficulty)")
+    print(f"Final Grade: {results.get('total_points', 0)}/{results.get('possible_points', 20)} ({results.get('percentage', 0)}%) - {results.get('letter_grade', 'F')}")
+
+    if 'difficulty_breakdown' in results:
+        print(f"\nDifficulty Level Performance:")
+        guided = results['difficulty_breakdown']['guided_queries']
+        moderate = results['difficulty_breakdown']['moderate_queries']
+        advanced = results['difficulty_breakdown']['advanced_queries']
+        print(f"  Guided Templates (1-4): {guided['points_earned']}/{guided['points_possible']} points")
+        print(f"  Moderate Challenges (5-7): {moderate['points_earned']}/{moderate['points_possible']} points")
+        print(f"  Advanced Challenges (8-10): {advanced['points_earned']}/{advanced['points_possible']} points")
+
+    if 'performance_analysis' in results:
+        perf = results['performance_analysis']
+        print(f"\nLearning Outcomes:")
+        print(f"  PostGIS Proficiency: {perf['postgis_proficiency_level']}")
+        print(f"  Foundation Mastery: {'✓' if perf['foundation_mastery'] else '○'}")
+        print(f"  Spatial Thinking: {'✓' if perf['spatial_thinking_development'] else '○'}")
+        print(f"  Advanced Challenges: {'✓' if perf['advanced_challenge_success'] else '○'}")
+        print(f"  Professional Ready: {'✓' if perf['ready_for_professional_work'] else '○'}")
+
     # Exit with error code if assignment failed
     if results.get('percentage', 0) < 60:
+        print(f"\n❌ Assignment score below passing threshold (60%)")
         sys.exit(1)
+    else:
+        print(f"\n✅ Assignment completed successfully!")
+        print(f"Grade: {results.get('letter_grade', 'F')} ({results.get('percentage', 0)}%)")
 
 
 if __name__ == "__main__":

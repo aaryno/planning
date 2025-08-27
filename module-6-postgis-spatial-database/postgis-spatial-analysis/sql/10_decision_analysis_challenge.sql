@@ -1,0 +1,134 @@
+-- ===================================================================
+-- PostGIS Spatial Analysis Assignment - Query 10
+-- Multi-Criteria Spatial Decision Analysis Challenge
+-- ===================================================================
+--
+-- OBJECTIVE: Implement a comprehensive multi-criteria decision analysis
+-- (MCDA) system to solve a complex real-world spatial planning problem
+-- using advanced PostGIS operations and decision science principles.
+--
+-- BUSINESS CONTEXT: You are a senior GIS analyst for the National Park
+-- Service Rocky Mountain Region. The agency has received federal funding
+-- to establish ONE new Emergency Response and Environmental Monitoring
+-- Facility to enhance visitor safety and ecological protection across
+-- the Colorado mountain region. The facility will cost $15 million and
+-- must serve for the next 30 years.
+--
+-- Your task is to identify the optimal location using quantitative
+-- spatial analysis that balances multiple competing objectives and
+-- stakeholder priorities.
+--
+-- POINTS: 2 (Ultimate challenge - problem statement only)
+-- ===================================================================
+
+-- DECISION PROBLEM:
+--
+-- The National Park Service Director requires a data-driven recommendation
+-- for facility placement that optimizes the following strategic objectives:
+--
+-- OBJECTIVE 1: EMERGENCY RESPONSE COVERAGE (30% weight)
+-- - Minimize response times to existing visitor facilities
+-- - Maximize coverage of high-visitation protected areas
+-- - Ensure accessibility during seasonal weather conditions
+-- - Prioritize areas currently underserved by ranger stations
+--
+-- OBJECTIVE 2: ENVIRONMENTAL MONITORING EFFECTIVENESS (25% weight)
+-- - Maximize proximity to critical monitoring stations
+-- - Ensure coverage of multiple ecosystem types (elevation zones)
+-- - Prioritize watersheds with limited current monitoring
+-- - Support multi-parameter environmental data collection
+--
+-- OBJECTIVE 3: TRANSPORTATION ACCESSIBILITY (20% weight)
+-- - Minimize construction costs via existing road access
+-- - Ensure year-round operational accessibility
+-- - Consider helicopter landing capabilities for emergencies
+-- - Balance remote location needs with logistical efficiency
+--
+-- OBJECTIVE 4: CONSERVATION IMPACT MINIMIZATION (15% weight)
+-- - Avoid high-sensitivity wilderness areas
+-- - Minimize fragmentation of wildlife habitat corridors
+-- - Respect indigenous cultural sites and traditional use areas
+-- - Comply with endangered species habitat protection requirements
+--
+-- OBJECTIVE 5: OPERATIONAL SYNERGIES (10% weight)
+-- - Leverage proximity to existing infrastructure
+-- - Enable coordination with partner agencies
+-- - Support multi-use facility development potential
+-- - Consider future expansion and adaptation capabilities
+--
+-- CONSTRAINTS AND REQUIREMENTS:
+-- • Facility must be within the study region boundary
+-- • Minimum 2-mile buffer from existing major facilities
+-- • Maximum elevation 9,500 feet (construction and winter access)
+-- • Must be within 15 miles of a major transportation route
+-- • Cannot be located within Wilderness Areas or National Parks
+-- • Must be within 30 miles of at least 3 monitoring stations
+-- • Total construction site must not exceed 50 acres impact area
+
+-- ANALYTICAL REQUIREMENTS:
+--
+-- Your multi-criteria decision analysis must:
+--
+-- 1. GENERATE CANDIDATE LOCATIONS
+--    Create a systematic grid or point-based candidate location system
+--    covering the feasible study area while respecting constraints.
+--
+-- 2. IMPLEMENT SCORING METHODOLOGY
+--    Develop quantitative scoring systems (0-100 scale) for each objective
+--    using appropriate spatial analysis functions and distance calculations.
+--
+-- 3. APPLY WEIGHTED DECISION MODEL
+--    Combine individual criterion scores using specified weights to
+--    calculate composite suitability scores for each candidate location.
+--
+-- 4. PERFORM SENSITIVITY ANALYSIS
+--    Demonstrate how changes in weighting priorities affect optimal locations.
+--
+-- 5. GENERATE DECISION RECOMMENDATIONS
+--    Identify the top 3 candidate locations with supporting quantitative
+--    evidence and implementation considerations.
+--
+-- DELIVERABLE EXPECTATIONS:
+--
+-- Your SQL analysis must produce a ranked list of candidate locations with:
+-- • Geographic coordinates and site descriptions
+-- • Individual criterion scores with justifications
+-- • Weighted composite scores and ranking methodology
+-- • Implementation feasibility assessment
+-- • Risk factors and mitigation strategies
+-- • Executive summary suitable for federal decision-makers
+--
+-- PROFESSIONAL STANDARDS:
+--
+-- This analysis will be used to justify a $15 million federal investment
+-- and must meet professional consulting standards for:
+-- • Methodological rigor and spatial accuracy
+-- • Transparent and defensible decision criteria
+-- • Comprehensive consideration of stakeholder interests
+-- • Risk assessment and uncertainty acknowledgment
+-- • Clear communication of technical results to non-technical audiences
+--
+-- SUCCESS CRITERIA:
+--
+-- ☐ Mathematically sound multi-criteria decision framework
+-- ☐ Appropriate use of PostGIS spatial analysis functions
+-- ☐ Accurate distance and area calculations with proper coordinate systems
+-- ☐ Logical constraint enforcement and feasibility screening
+-- ☐ Defensible weighting and scoring methodologies
+-- ☐ Clear identification of optimal location with supporting evidence
+-- ☐ Professional-quality analysis suitable for federal decision-making
+--
+-- NOTE: This is an open-ended capstone challenge that requires you to
+-- synthesize all PostGIS skills developed in this assignment series.
+-- There is no single correct answer - demonstrate analytical creativity,
+-- technical competence, and professional judgment in your approach.
+--
+-- Your solution should reflect the sophisticated spatial analysis
+-- capabilities expected of senior GIS professionals in government
+-- and consulting environments.
+
+-- CHALLENGE LEVEL: Expert
+--
+-- This problem requires original algorithm development, creative
+-- problem-solving, and advanced PostGIS expertise. Success indicates
+-- readiness for professional-level spatial analysis responsibilities.

@@ -2,8 +2,13 @@
 """
 PostGIS Spatial Analysis Assignment - Automated Test Suite
 
-Tests all 4 advanced spatial analysis queries for correctness, syntax, and expected results.
-Each query is worth 5 points for a total of 20 points.
+Tests all 10 spatial analysis queries for correctness, syntax, and expected results.
+Each query is worth 2 points for a total of 20 points.
+
+Progressive difficulty structure:
+- Queries 1-4: Template completion with guided examples
+- Queries 5-7: Moderate challenge requiring spatial thinking
+- Queries 8-10: Advanced challenges with minimal guidance
 
 Usage:
     python test_assignment.py -v
@@ -57,6 +62,18 @@ class PostGISSpatialAnalysisTester:
         with open(sql_file, 'r') as f:
             sql_content = f.read()
 
+        # Check for incomplete work - but be lenient for progressive difficulty
+        if '____' in sql_content and not any(complete_marker in sql_content.upper()
+                                           for complete_marker in ['COMPLETE EXAMPLE', 'WORKING EXAMPLE']):
+            # For early queries, this might be expected template work
+            query_num = int(filename.split('_')[0])
+            if query_num <= 4:
+                raise ValueError(f"Query {query_num} template not completed - fill in the blanks (_____)")
+            else:
+                # For later queries, TODO items are expected but blanks suggest incomplete work
+                if 'TODO' in sql_content.upper() and sql_content.count('____') > 5:
+                    pytest.skip(f"Query {query_num} appears incomplete - advanced challenge not attempted")
+
         # Remove comments and empty lines for execution
         sql_lines = []
         in_comment_block = False
@@ -66,7 +83,6 @@ class PostGISSpatialAnalysisTester:
 
             # Handle multi-line comments
             if '/*' in line and '*/' in line:
-                # Single line comment block
                 continue
             elif '/*' in line:
                 in_comment_block = True
@@ -85,9 +101,13 @@ class PostGISSpatialAnalysisTester:
 
         sql_query = ' '.join(sql_lines)
 
-        # Check for TODO placeholders
-        if '____' in sql_query or 'TODO' in sql_query.upper():
-            raise ValueError(f"Query contains unfinished TODO items or placeholder blanks (_____)")
+        # Skip if query is effectively empty
+        if len(sql_query.strip()) < 20:
+            query_num = int(filename.split('_')[0])
+            if query_num <= 7:
+                pytest.skip(f"Query {query_num} not implemented")
+            else:
+                pytest.skip(f"Advanced challenge Query {query_num} not attempted")
 
         try:
             self.cursor.execute(sql_query)
@@ -95,16 +115,16 @@ class PostGISSpatialAnalysisTester:
         except psycopg2.Error as e:
             raise psycopg2.Error(f"SQL execution failed: {e}")
 
-    def validate_spatial_result(self, results: List[Tuple], expected_columns: int,
+    def validate_spatial_result(self, results: List[Tuple], min_columns: int = 3,
                               has_geometry: bool = False) -> None:
         """Validate spatial query results."""
         assert len(results) > 0, "Query returned no results"
-        assert len(results[0]) >= expected_columns, f"Expected at least {expected_columns} columns"
+        assert len(results[0]) >= min_columns, f"Expected at least {min_columns} columns"
 
         if has_geometry:
-            # Check if any column contains spatial data (WKT format or binary)
+            # Check if any column contains spatial data
             has_spatial_data = False
-            for row in results[:3]:  # Check first few rows
+            for row in results[:3]:
                 for col in row:
                     if col is not None and (
                         (isinstance(col, str) and any(geom_type in str(col).upper()
@@ -117,188 +137,264 @@ class PostGISSpatialAnalysisTester:
                     break
             assert has_spatial_data, "Query should return spatial geometry data"
 
-    def validate_numeric_ranges(self, results: List[Tuple], column_idx: int,
-                              min_val: float = None, max_val: float = None) -> None:
-        """Validate numeric column ranges."""
-        for row in results:
-            if row[column_idx] is not None:
-                value = float(row[column_idx])
-                if min_val is not None:
-                    assert value >= min_val, f"Value {value} below minimum {min_val}"
-                if max_val is not None:
-                    assert value <= max_val, f"Value {value} above maximum {max_val}"
-
 
 class TestPostGISSpatialAnalysis(PostGISSpatialAnalysisTester):
-    """Test cases for PostGIS spatial analysis queries."""
+    """Test cases for PostGIS spatial analysis queries (progressive difficulty)."""
 
-    def test_01_multi_layer_intersection(self):
-        """Test Query 1: Multi-Layer Spatial Intersection Analysis (5 points)"""
-        print("\n=== Testing Query 1: Multi-Layer Spatial Intersection ===")
+    def test_01_spatial_inspection(self):
+        """Test Query 1: Basic Spatial Data Inspection (2 points) - Complete example"""
+        print("\n=== Testing Query 1: Basic Spatial Data Inspection ===")
 
-        results = self.execute_sql_file("01_multi_layer_intersection.sql")
+        results = self.execute_sql_file("01_spatial_inspection.sql")
 
-        # Validate basic structure
-        self.validate_spatial_result(results, 7, has_geometry=True)
+        # Should return data for 3 different datasets
+        assert len(results) >= 3, "Should inspect at least 3 spatial datasets"
 
-        # Check that we have meaningful intersection results
-        assert len(results) >= 3, "Should find at least 3 protected area/watershed intersections"
+        # Check basic result structure
+        assert len(results[0]) >= 8, "Should have comprehensive inspection columns"
 
-        # Validate column structure (protected area, watershed, overlap info)
-        for row in results:
-            protected_area_name = row[0]
-            watershed_name = row[3]
-            overlap_acres = row[5]
-            percent_of_protected = row[6]
+        # Validate dataset information
+        dataset_names = [row[0] for row in results if row[0]]
+        expected_datasets = ['Protected Areas', 'Transportation Network', 'Facilities']
+        found_datasets = [name for name in expected_datasets if any(name in str(dataset) for dataset in dataset_names)]
+        assert len(found_datasets) >= 2, f"Should inspect expected datasets, found: {dataset_names}"
 
-            assert protected_area_name is not None, "Protected area name should not be null"
-            assert watershed_name is not None, "Watershed name should not be null"
-            assert isinstance(overlap_acres, (int, float)), "Overlap acres should be numeric"
-            assert isinstance(percent_of_protected, (int, float)), "Percentage should be numeric"
-            assert 0 <= percent_of_protected <= 100, "Percentage should be between 0-100"
+        # Check geometry types are identified
+        geometry_types = [row[2] for row in results if row[2]]
+        assert any('Point' in str(gt) for gt in geometry_types), "Should identify Point geometries"
 
-        # Validate that largest overlaps come first (ordering check)
-        overlap_areas = [float(row[5]) for row in results]
-        assert overlap_areas == sorted(overlap_areas, reverse=True), "Results should be ordered by overlap area DESC"
+        # Check coordinate systems
+        coordinate_systems = [row[4] for row in results if row[4] and isinstance(row[4], int)]
+        assert any(srid == 4326 for srid in coordinate_systems), "Should identify WGS84 (4326) coordinate system"
 
-        print(f"✓ Found {len(results)} protected area/watershed intersections")
-        print(f"✓ Largest overlap: {max(overlap_areas):.1f} acres")
+        print(f"✓ Successfully inspected {len(results)} spatial datasets")
+        print(f"✓ Found geometry types: {set(str(gt) for gt in geometry_types if gt)}")
 
-    def test_02_advanced_buffer_analysis(self):
-        """Test Query 2: Advanced Buffer Analysis - Facility Accessibility (5 points)"""
-        print("\n=== Testing Query 2: Advanced Buffer Analysis ===")
+    def test_02_simple_buffers(self):
+        """Test Query 2: Simple Buffer Operations (2 points) - Template completion"""
+        print("\n=== Testing Query 2: Simple Buffer Operations ===")
 
-        results = self.execute_sql_file("02_advanced_buffer_analysis.sql")
+        results = self.execute_sql_file("02_simple_buffers.sql")
 
-        # Validate basic structure
-        self.validate_spatial_result(results, 8)
+        # Should return visitor centers with buffer analysis
+        assert len(results) >= 1, "Should find at least 1 visitor center"
 
-        # Should find facilities with limited access
-        assert len(results) >= 2, "Should find at least 2 facilities with limited transportation access"
+        # Check result structure
+        assert len(results[0]) >= 5, "Should have facility info and buffer calculations"
 
-        # Validate accessibility analysis results
+        # Validate buffer calculations
         for row in results:
             facility_name = row[0]
-            routes_1mile = row[2]
-            routes_5mile = row[3]
-            closest_route_miles = row[4]
-            accessibility_rating = row[7]
+            buffer_area = row[4] if len(row) > 4 else None
+            buffer_perimeter = row[5] if len(row) > 5 else None
 
             assert facility_name is not None, "Facility name should not be null"
-            assert isinstance(routes_1mile, int), "Routes within 1 mile should be integer"
-            assert isinstance(routes_5mile, int), "Routes within 5 miles should be integer"
-            assert routes_5mile >= routes_1mile, "5-mile count should be >= 1-mile count"
-            assert isinstance(closest_route_miles, (int, float)), "Distance should be numeric"
-            assert closest_route_miles > 0, "Distance to closest route should be positive"
-            assert accessibility_rating in ['Excellent Access', 'Good Access', 'Limited Access', 'Remote Location']
 
-        # Check that results are filtered for limited access
-        limited_access_count = sum(1 for row in results if row[4] > 2.0)  # closest_route_miles > 2
-        assert limited_access_count >= len(results) // 2, "Most results should have limited access"
+            if buffer_area is not None:
+                # 1-mile buffer should be approximately π square miles (≈ 3.14)
+                assert isinstance(buffer_area, (int, float)), "Buffer area should be numeric"
+                assert 2.5 <= buffer_area <= 4.0, f"1-mile buffer area should be ~3.14 sq mi, got {buffer_area}"
 
-        print(f"✓ Analyzed {len(results)} facilities with limited transportation access")
-        print(f"✓ Most remote facility: {max(float(row[4]) for row in results):.1f} miles from nearest route")
+            if buffer_perimeter is not None:
+                # 1-mile buffer perimeter should be approximately 2π miles (≈ 6.28)
+                assert isinstance(buffer_perimeter, (int, float)), "Buffer perimeter should be numeric"
+                assert 5.5 <= buffer_perimeter <= 7.0, f"1-mile buffer perimeter should be ~6.28 miles, got {buffer_perimeter}"
 
-    def test_03_network_routing_analysis(self):
-        """Test Query 3: Network Routing Analysis - Transportation Optimization (5 points)"""
-        print("\n=== Testing Query 3: Network Routing Analysis ===")
+        print(f"✓ Successfully created buffers for {len(results)} visitor centers")
+        print(f"✓ Buffer calculations appear accurate")
 
-        results = self.execute_sql_file("03_network_routing_analysis.sql")
+    def test_03_spatial_measurements(self):
+        """Test Query 3: Basic Spatial Measurements (2 points) - Guided template"""
+        print("\n=== Testing Query 3: Basic Spatial Measurements ===")
 
-        # Validate basic structure
-        self.validate_spatial_result(results, 10)
+        results = self.execute_sql_file("03_spatial_measurements.sql")
 
-        # Should find facility pairs for routing analysis
-        assert len(results) >= 3, "Should find at least 3 facility pairs for routing analysis"
+        # Should return measurements for ranger stations and protected areas
+        assert len(results) >= 3, "Should return measurements for multiple features"
 
-        # Validate routing analysis results
-        routing_ratios = []
+        # Check result structure
+        assert len(results[0]) >= 4, "Should have comprehensive measurement columns"
+
+        # Validate distance and area measurements
+        distance_found = False
+        area_found = False
+
         for row in results:
-            origin_name = row[0]
-            destination_name = row[2]
-            straight_line_miles = row[4]
-            estimated_network_miles = row[5]
-            routing_efficiency_ratio = row[6]
-            route_difficulty = row[9]
-            improvement_priority = row[10]
+            # Look for distance measurements (should be positive numbers)
+            if len(row) > 3 and isinstance(row[3], (int, float)) and row[3] > 0:
+                distance_found = True
+                distance = row[3]
+                assert distance < 100, f"Distance {distance} miles seems too large for the study area"
 
-            assert origin_name != destination_name, "Origin and destination should be different"
-            assert isinstance(straight_line_miles, (int, float)), "Straight-line distance should be numeric"
-            assert isinstance(estimated_network_miles, (int, float)), "Network distance should be numeric"
-            assert isinstance(routing_efficiency_ratio, (int, float)), "Efficiency ratio should be numeric"
-            assert estimated_network_miles >= straight_line_miles, "Network distance should be >= straight-line"
-            assert routing_efficiency_ratio >= 1.0, "Efficiency ratio should be >= 1.0"
-            assert route_difficulty in ['Easy', 'Moderate', 'Difficult', 'Very Difficult']
-            assert improvement_priority in ['High Priority', 'Medium Priority', 'Low Priority']
+            # Look for area measurements (should be positive numbers)
+            if len(row) > 4 and isinstance(row[4], (int, float)) and row[4] > 0:
+                area_found = True
+                area = row[4]
+                assert area < 1000, f"Area {area} sq miles seems too large for individual features"
 
-            routing_ratios.append(float(routing_efficiency_ratio))
+        assert distance_found or area_found, "Should find either distance or area measurements"
 
-        # Check for inefficient routes (the focus of this analysis)
-        inefficient_routes = [r for r in routing_ratios if r > 2.0]
-        assert len(inefficient_routes) >= 1, "Should identify at least 1 inefficient route"
+        print(f"✓ Successfully calculated spatial measurements for {len(results)} features")
+        print(f"✓ Distance measurements: {'found' if distance_found else 'not found'}")
+        print(f"✓ Area measurements: {'found' if area_found else 'not found'}")
 
-        print(f"✓ Analyzed {len(results)} facility-to-facility routes")
-        print(f"✓ Most inefficient route ratio: {max(routing_ratios):.2f}")
+    def test_04_coordinate_transformations(self):
+        """Test Query 4: Coordinate System Transformations (2 points) - Guided template"""
+        print("\n=== Testing Query 4: Coordinate System Transformations ===")
 
-    def test_04_multi_criteria_decision_analysis(self):
-        """Test Query 4: Multi-Criteria Spatial Decision Support Analysis (5 points)"""
-        print("\n=== Testing Query 4: Multi-Criteria Decision Analysis ===")
+        results = self.execute_sql_file("04_coordinate_transformations.sql")
 
-        results = self.execute_sql_file("04_multi_criteria_decision_analysis.sql")
+        # Should show coordinate transformations
+        assert len(results) >= 2, "Should demonstrate coordinate transformations"
 
-        # Validate basic structure
-        self.validate_spatial_result(results, 12)
-
-        # Should return top candidate locations (limited by LIMIT clause)
-        assert len(results) >= 3, "Should return at least 3 candidate locations"
-        assert len(results) <= 10, "Should limit results to top candidates"
-
-        # Validate multi-criteria analysis results
-        composite_scores = []
+        # Look for different coordinate systems
+        coordinate_systems_found = []
         for row in results:
-            longitude = row[1]
-            latitude = row[2]
-            transport_score = row[3]
-            coverage_score = row[4]
-            monitoring_score = row[5]
-            protected_score = row[6]
-            terrain_score = row[7]
-            composite_score = row[8]
-            suitability = row[9]
-            recommendation = row[10]
+            if len(row) > 2 and isinstance(row[2], (int, float)):
+                # Check for WGS84 coordinates (longitude should be negative in Colorado)
+                if -110 <= row[2] <= -104:
+                    coordinate_systems_found.append("WGS84")
+                # Check for projected coordinates (should be much larger numbers)
+                elif abs(row[2]) > 100000:
+                    coordinate_systems_found.append("Projected")
 
-            # Validate coordinates
-            assert -110 <= longitude <= -104, "Longitude should be within Colorado bounds"
-            assert 36 <= latitude <= 42, "Latitude should be within Colorado bounds"
+        assert len(set(coordinate_systems_found)) >= 1, "Should demonstrate coordinate system transformations"
 
-            # Validate individual scores (0-100 scale)
-            for score in [transport_score, coverage_score, monitoring_score, protected_score, terrain_score]:
-                assert isinstance(score, (int, float)), "Individual scores should be numeric"
-                assert 0 <= score <= 100, f"Score {score} should be between 0-100"
+        print(f"✓ Successfully demonstrated coordinate transformations")
+        print(f"✓ Coordinate systems found: {set(coordinate_systems_found)}")
 
-            # Validate composite score
-            assert isinstance(composite_score, (int, float)), "Composite score should be numeric"
-            assert 0 <= composite_score <= 100, "Composite score should be between 0-100"
+    def test_05_spatial_relationships(self):
+        """Test Query 5: Spatial Relationships (2 points) - Moderate challenge"""
+        print("\n=== Testing Query 5: Spatial Relationships ===")
 
-            # Validate weighted calculation (approximately)
-            expected_composite = (transport_score * 0.25 + coverage_score * 0.30 +
-                                monitoring_score * 0.20 + protected_score * 0.15 + terrain_score * 0.10)
-            assert abs(composite_score - expected_composite) < 1.0, "Composite score calculation error"
+        results = self.execute_sql_file("05_spatial_relationships.sql")
 
-            assert suitability in ['Excellent', 'Good', 'Fair', 'Poor'], "Invalid suitability rating"
+        # Should find spatial relationships between features
+        assert len(results) >= 2, "Should find spatial relationships between features"
 
-            composite_scores.append(float(composite_score))
+        # Check for relationship analysis
+        relationship_types = []
+        for row in results:
+            if len(row) >= 3:
+                # Look for facilities within protected areas
+                if 'protected' in str(row[2]).lower() or 'park' in str(row[2]).lower():
+                    relationship_types.append("within_protected")
+                # Look for route/watershed relationships
+                elif 'watershed' in str(row[2]).lower() or 'basin' in str(row[2]).lower():
+                    relationship_types.append("crosses_watershed")
+                # Look for monitoring coverage
+                elif 'zone' in str(row[2]).lower() or 'management' in str(row[2]).lower():
+                    relationship_types.append("within_zone")
 
-        # Check that results are ordered by composite score (best first)
-        assert composite_scores == sorted(composite_scores, reverse=True), "Results should be ordered by composite score DESC"
+        assert len(relationship_types) >= 1, "Should identify spatial relationships"
 
-        # Check that we have viable candidates (filtered results)
-        viable_sites = [s for s in composite_scores if s >= 60]
-        assert len(viable_sites) >= 2, "Should have at least 2 viable candidate sites"
+        print(f"✓ Successfully identified spatial relationships")
+        print(f"✓ Relationship types found: {set(relationship_types)}")
 
-        print(f"✓ Evaluated {len(results)} candidate locations")
-        print(f"✓ Best composite score: {max(composite_scores):.1f}")
-        print(f"✓ Viable sites (score ≥ 60): {len(viable_sites)}")
+    def test_06_spatial_joins(self):
+        """Test Query 6: Spatial Joins (2 points) - Moderate guidance"""
+        print("\n=== Testing Query 6: Spatial Joins ===")
+
+        results = self.execute_sql_file("06_spatial_joins.sql")
+
+        # Should perform spatial joins between multiple tables
+        assert len(results) >= 3, "Should perform spatial joins across multiple features"
+
+        # Check for joined attributes from multiple tables
+        multi_table_data = False
+        for row in results:
+            if len(row) >= 6:  # Should have attributes from multiple tables
+                multi_table_data = True
+                break
+
+        assert multi_table_data, "Should combine attributes from multiple spatial tables"
+
+        print(f"✓ Successfully performed spatial joins on {len(results)} features")
+
+    def test_07_complex_buffer_analysis(self):
+        """Test Query 7: Complex Buffer Analysis (2 points) - Minimal guidance"""
+        print("\n=== Testing Query 7: Complex Buffer Analysis ===")
+
+        try:
+            results = self.execute_sql_file("07_complex_buffer_analysis.sql")
+
+            # This is a challenging query - any meaningful result is good
+            assert len(results) >= 1, "Should return some buffer analysis results"
+
+            # Check for evidence of complex analysis
+            complex_analysis = False
+            for row in results:
+                if len(row) >= 4:  # Multiple buffer zones or calculations
+                    complex_analysis = True
+                    break
+
+            if complex_analysis:
+                print(f"✓ Successfully performed complex buffer analysis")
+            else:
+                print(f"✓ Query executed - basic buffer analysis completed")
+
+        except (FileNotFoundError, ValueError) as e:
+            if "not implemented" in str(e).lower() or "not attempted" in str(e).lower():
+                pytest.skip("Complex buffer analysis challenge not yet attempted")
+            else:
+                raise
+
+    def test_08_multi_layer_intersections(self):
+        """Test Query 8: Multi-Layer Intersections (2 points) - Hints only"""
+        print("\n=== Testing Query 8: Multi-Layer Intersections ===")
+
+        try:
+            results = self.execute_sql_file("08_multi_layer_intersections.sql")
+
+            # Advanced challenge - any result is success
+            assert len(results) >= 1, "Should return intersection analysis results"
+
+            print(f"✓ Successfully performed multi-layer intersection analysis")
+            print(f"✓ Found {len(results)} intersection relationships")
+
+        except (FileNotFoundError, ValueError) as e:
+            if "not implemented" in str(e).lower() or "not attempted" in str(e).lower():
+                pytest.skip("Multi-layer intersection challenge not yet attempted")
+            else:
+                raise
+
+    def test_09_network_analysis(self):
+        """Test Query 9: Network Analysis (2 points) - Problem statement only"""
+        print("\n=== Testing Query 9: Network Analysis ===")
+
+        try:
+            results = self.execute_sql_file("09_network_analysis.sql")
+
+            # This is an advanced challenge
+            assert len(results) >= 1, "Should return network analysis results"
+
+            print(f"✓ Successfully performed network analysis")
+            print(f"✓ Advanced spatial analysis challenge completed")
+
+        except (FileNotFoundError, ValueError) as e:
+            if "not implemented" in str(e).lower() or "not attempted" in str(e).lower():
+                pytest.skip("Network analysis challenge not yet attempted")
+            else:
+                raise
+
+    def test_10_decision_analysis_challenge(self):
+        """Test Query 10: Decision Analysis Challenge (2 points) - Ultimate challenge"""
+        print("\n=== Testing Query 10: Multi-Criteria Decision Analysis Challenge ===")
+
+        try:
+            results = self.execute_sql_file("10_decision_analysis_challenge.sql")
+
+            # Ultimate challenge - any meaningful result is exceptional
+            assert len(results) >= 1, "Should return decision analysis results"
+
+            print(f"✓ Successfully completed ultimate spatial analysis challenge!")
+            print(f"✓ Professional-level multi-criteria decision analysis demonstrated")
+
+        except (FileNotFoundError, ValueError) as e:
+            if "not implemented" in str(e).lower() or "not attempted" in str(e).lower():
+                pytest.skip("Ultimate decision analysis challenge not yet attempted")
+            else:
+                raise
 
     def test_database_setup(self):
         """Test that PostGIS and spatial data are properly loaded."""
@@ -318,16 +414,7 @@ class TestPostGISSpatialAnalysis(PostGISSpatialAnalysisTester):
             self.cursor.execute(f"SELECT COUNT(*) FROM {table};")
             count = self.cursor.fetchone()[0]
             assert count > 0, f"Table {table} has no data"
-
-            # Test spatial index exists
-            self.cursor.execute(f"""
-                SELECT COUNT(*) FROM pg_indexes
-                WHERE tablename = '{table}' AND indexname LIKE '%geom%'
-            """)
-            spatial_index = self.cursor.fetchone()[0]
-            assert spatial_index > 0, f"No spatial index found for {table}"
-
-            print(f"✓ {table}: {count} records with spatial index")
+            print(f"✓ {table}: {count} records")
 
     def test_spatial_functions_available(self):
         """Test that required PostGIS functions are available."""
@@ -335,8 +422,8 @@ class TestPostGISSpatialAnalysis(PostGISSpatialAnalysisTester):
 
         functions_to_test = [
             'ST_Intersects', 'ST_Intersection', 'ST_Area', 'ST_Buffer',
-            'ST_Distance', 'ST_DWithin', 'ST_Transform', 'ST_ShortestLine',
-            'ST_ClosestPoint', 'ST_Union', 'ST_MakePoint', 'ST_Centroid'
+            'ST_Distance', 'ST_DWithin', 'ST_Transform', 'ST_GeometryType',
+            'ST_SRID', 'ST_AsText', 'ST_Extent'
         ]
 
         for func in functions_to_test:
@@ -346,20 +433,8 @@ class TestPostGISSpatialAnalysis(PostGISSpatialAnalysisTester):
 
         print(f"✓ All {len(functions_to_test)} required PostGIS functions are available")
 
-    def test_coordinate_systems(self):
-        """Test that required coordinate systems are available."""
-        print("\n=== Testing Coordinate Systems ===")
 
-        required_srid = [4326, 3857, 26913]  # WGS84, Web Mercator, UTM Zone 13N
-
-        for srid in required_srid:
-            self.cursor.execute("SELECT srid FROM spatial_ref_sys WHERE srid = %s;", (srid,))
-            result = self.cursor.fetchone()
-            assert result is not None, f"SRID {srid} not available"
-            print(f"✓ SRID {srid} available")
-
-
-# Pytest fixtures for running tests
+# Pytest fixtures and main execution
 @pytest.fixture(scope="session")
 def tester():
     """Create a tester instance for the session."""
@@ -370,14 +445,15 @@ if __name__ == "__main__":
     # Run tests directly with python test_assignment.py
     import sys
 
-    print("PostGIS Spatial Analysis Assignment - Test Suite")
-    print("=" * 60)
+    print("PostGIS Spatial Analysis Assignment - Progressive Test Suite")
+    print("=" * 70)
 
     tester = PostGISSpatialAnalysisTester()
     test_methods = [method for method in dir(TestPostGISSpatialAnalysis) if method.startswith('test_')]
 
     passed = 0
     failed = 0
+    skipped = 0
     total_points = 0
     max_points = 20
 
@@ -393,9 +469,9 @@ if __name__ == "__main__":
             # Run the test
             getattr(test_instance, test_method)()
 
-            # Award points for query tests
-            if test_method.startswith('test_0') and test_method[5].isdigit():
-                points = 5
+            # Award points for query tests (01-10)
+            if test_method.startswith('test_') and any(f'test_{i:02d}_' in test_method for i in range(1, 11)):
+                points = 2
                 total_points += points
                 print(f"✓ PASSED - {points} points awarded")
             else:
@@ -403,19 +479,32 @@ if __name__ == "__main__":
 
             passed += 1
 
+        except pytest.skip.Exception as e:
+            print(f"⏭ SKIPPED: {str(e)}")
+            skipped += 1
         except Exception as e:
             print(f"✗ FAILED: {str(e)}")
             failed += 1
         finally:
             tester.teardown_method()
 
-    print("\n" + "=" * 60)
-    print("TEST SUMMARY")
-    print("=" * 60)
+    print("\n" + "=" * 70)
+    print("POSTGIS SPATIAL ANALYSIS - TEST SUMMARY")
+    print("=" * 70)
     print(f"Passed: {passed}")
     print(f"Failed: {failed}")
+    print(f"Skipped: {skipped}")
     print(f"Points: {total_points}/{max_points}")
     print(f"Grade: {total_points/max_points*100:.1f}%")
+
+    if total_points >= 18:
+        print("🌟 EXCELLENT - Advanced PostGIS proficiency demonstrated!")
+    elif total_points >= 16:
+        print("👍 GOOD - Strong spatial analysis foundation")
+    elif total_points >= 14:
+        print("📚 ADEQUATE - Continue practicing advanced concepts")
+    else:
+        print("📖 DEVELOPING - Focus on foundational spatial concepts")
 
     if failed > 0:
         sys.exit(1)

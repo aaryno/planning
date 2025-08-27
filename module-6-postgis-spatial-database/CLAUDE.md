@@ -98,9 +98,9 @@ directory:
 
 #### `postgis-spatial-analysis/` - Advanced Spatial Operations
 **Status**: ✅ **Production Ready**  
-**Points**: 20 (10 SQL queries × 3 points each)  
-**Complexity**: ⭐⭐⭐ Application  
-**Time Investment**: 3-4 hours  
+**Points**: 20 (10 SQL queries × 2 points each)  
+**Complexity**: ⭐⭐ Foundation  
+**Time Investment**: 3-4 hours
 
 **Learning Objectives**:
 - Multi-dataset spatial analysis
@@ -282,7 +282,7 @@ All PostGIS assignments use a unified grading system that evaluates:
 
 ### Professional Grading Engine (calculate_grade.py)
 
-#### Foundation Assignment Categories (4 functions × 5 points = 20 total)
+#### Foundation Assignment Categories (10 functions × 2 points = 20 total)
 1. **Database Connection** (5 points)
    - Successful PostgreSQL/PostGIS connection
    - Proper connection management
